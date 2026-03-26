@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ullathorpe Rental — Alquiler de Equipos Audiovisuales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════
+       VARIABLES & RESET
+    ═══════════════════════════════════════ */
+    :root {
+      --bordo:       #7B1C1C;
+      --bordo-deep:  #5a1212;
+      --bordo-light: #9b2525;
+      --gold:        #C9A84C;
+      --gold-light:  #e0c472;
+      --dark:        #0d0d0d;
+      --dark2:       #151515;
+      --dark3:       #1f1f1f;
+      --dark4:       #2a2a2a;
+      --text:        #e8e0d0;
+      --text-muted:  #8a7a6a;
+      --serif:       'Cormorant Garamond', Georgia, serif;
+      --sans:        'Outfit', sans-serif;
+      --nav-h:       68px;
+      --r:           3px;
+
+      /* ── GITHUB IMAGES BASE URL
+         Cambiá esta variable con la URL raw de tu carpeta de imágenes en GitHub.
+         Ejemplo: https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/img/catalogo/
+         Las imágenes deben llamarse igual que el campo "img" en CATALOG_DATA.
+      ── */
+      --img-base: './img/catalogo/';
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans);
+      background: var(--dark);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* noise overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 9000;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.022;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--dark2); }
+    ::-webkit-scrollbar-thumb { background: var(--bordo); border-radius: 3px; }
+
+    /* ═══════════════════════════════════════
+       NAV
+    ═══════════════════════════════════════ */
+    #main-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 800;
+      height: var(--nav-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(1rem, 4vw, 3.5rem);
+      background: rgba(10,10,10,0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      transition: border-color .3s;
+    }
+    #main-nav.scrolled { border-bottom-color: rgba(201,168,76,0.22); }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: .6rem;
+      cursor: pointer; text-decoration: none; flex-shrink: 0;
+    }
+    .nav-logo img { height: 42px; width: auto; display: block; }
+    .nav-logo-name {
+      font-family: var(--serif); font-size: 1.1rem; font-weight: 600;
+      letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
+    }
+
+    .nav-links { display: flex; gap: 0; list-style: none; }
+    .nav-links li a {
+      display: block; font-size: .72rem; font-weight: 500;
+      letter-spacing: .12em; text-transform: uppercase;
+      text-decoration: none; color: var(--text-muted);
+      padding: .45rem .9rem; border-radius: var(--r);
+      transition: color .2s, background .2s; cursor: pointer;
+      border: none; background: none; font-family: var(--sans);
+    }
+    .nav-links li a:hover,
+    .nav-links li a.active { color: var(--gold); }
+    .nav-links li a.nav-cta {
+      background: var(--bordo); color: var(--gold) !important;
+      border: 1px solid var(--bordo-light); margin-left: .75rem; padding: .42rem 1.1rem;
+    }
+    .nav-links li a.nav-cta:hover { background: var(--bordo-light); color: #fff !important; }
+
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; padding: 6px; background: none; border: none;
+    }
+    .hamburger span {
+      display: block; width: 22px; height: 2px;
+      background: var(--gold); border-radius: 2px; transition: all .3s;
+    }
+
+    /* ═══════════════════════════════════════
+       SPA ENGINE
+    ═══════════════════════════════════════ */
+    .page-section { display: none; min-height: 100vh; padding-top: var(--nav-h); }
+    .page-section.active { display: block; }
+
+    /* ═══════════════════════════════════════
+       SHARED UTILITIES
+    ═══════════════════════════════════════ */
+    .section-wrap {
+      padding: clamp(3.5rem,7vw,6rem) clamp(1.25rem,5vw,5rem);
+      max-width: 1240px; margin: 0 auto;
+    }
+    .section-header { text-align: center; margin-bottom: clamp(2.5rem,5vw,4rem); }
+    .eyebrow {
+      font-size: .7rem; font-weight: 600; letter-spacing: .25em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: .7rem;
+    }
+    h2 { font-family: var(--serif); font-size: clamp(2rem,4vw,3rem); font-weight: 600; line-height: 1.1; color: var(--text); }
+    h2 em { font-style: italic; color: var(--gold); }
+    .section-desc {
+      font-size: .9rem; color: var(--text-muted); margin-top: .9rem;
+      max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.75;
+    }
+    .ornament { display: flex; align-items: center; gap: .85rem; justify-content: center; margin: .7rem 0; }
+    .ornament::before { content: ''; flex: 1; max-width: 70px; height: 1px; background: linear-gradient(90deg,transparent,var(--gold)); }
+    .ornament::after  { content: ''; flex: 1; max-width: 70px; height: 1px; background: linear-gradient(90deg,var(--gold),transparent); }
+    .ornament-diamond { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: .55rem;
+      background: var(--bordo); color: var(--gold-light);
+      font-family: var(--sans); font-size: .78rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase; text-decoration: none;
+      padding: .8rem 1.65rem; border: 1px solid var(--bordo-light); border-radius: var(--r);
+      cursor: pointer; transition: all .22s;
+    }
+    .btn-primary:hover { background: var(--bordo-light); color: #fff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(123,28,28,.4); }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: .55rem;
+      background: transparent; color: var(--gold);
+      font-family: var(--sans); font-size: .78rem; font-weight: 500;
+      letter-spacing: .1em; text-transform: uppercase; text-decoration: none;
+      padding: .8rem 1.65rem; border: 1px solid rgba(201,168,76,.35); border-radius: var(--r);
+      cursor: pointer; transition: all .22s;
+    }
+    .btn-secondary:hover { background: rgba(201,168,76,.08); border-color: var(--gold); }
+
+    /* ═══════════════════════════════════════
+       CONTACT BLOCK (shared footer per page)
+    ═══════════════════════════════════════ */
+    .contact-block {
+      background: var(--dark2);
+      border-top: 1px solid rgba(201,168,76,.1);
+      padding: clamp(3rem,6vw,5rem) clamp(1.25rem,5vw,5rem) 0;
+    }
+    .contact-block .inner { max-width: 1240px; margin: 0 auto; }
+    .contact-cards {
+      display: grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr));
+      gap: 1rem; max-width: 900px; margin: 0 auto 2.5rem;
+    }
+    .contact-card {
+      background: var(--dark3); border: 1px solid rgba(255,255,255,.05); border-radius: var(--r);
+      padding: 1.5rem 1rem; text-align: center; text-decoration: none; color: var(--text);
+      display: flex; flex-direction: column; align-items: center; gap: .6rem;
+      transition: border-color .22s, transform .22s; cursor: pointer;
+    }
+    .contact-card:hover { border-color: rgba(201,168,76,.28); transform: translateY(-2px); }
+    .contact-card .ci { font-size: 1.6rem; line-height: 1; }
+    .contact-card .cl { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+    .contact-card .cv { font-family: var(--serif); font-size: 1rem; font-weight: 600; color: var(--gold); }
+    .contact-wsp-wrap { text-align: center; padding-bottom: 2.5rem; }
+    .wsp-big {
+      display: inline-flex; align-items: center; gap: .65rem;
+      background: #25D366; color: #fff;
+      font-family: var(--sans); font-size: .9rem; font-weight: 600; letter-spacing: .05em;
+      padding: .9rem 2.25rem; border-radius: var(--r); text-decoration: none;
+      transition: all .2s; cursor: pointer; border: none;
+    }
+    .wsp-big:hover { background: #17a348; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(37,211,102,.3); }
+
+    footer.site-footer {
+      background: var(--dark2); border-top: 1px solid rgba(201,168,76,.08);
+      padding: 2rem clamp(1.25rem,5vw,5rem);
+      display: flex; flex-direction: column; align-items: center; gap: 1rem; text-align: center;
+    }
+    .footer-logo img { height: 52px; opacity: .75; }
+    .footer-tagline { font-family: var(--serif); font-style: italic; font-size: .95rem; color: var(--text-muted); }
+    .footer-legal { font-size: .7rem; color: var(--text-muted); opacity: .55; letter-spacing: .04em; }
+
+    /* ═══════════════════════════════════════
+       HOME / HERO
+    ═══════════════════════════════════════ */
+    .hero-wrap {
+      min-height: calc(100vh - var(--nav-h));
+      display: flex; align-items: center;
+      padding: clamp(3rem,7vw,6rem) clamp(1.25rem,6vw,5rem);
+      position: relative; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 75% 55% at 68% 50%, rgba(123,28,28,.17) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 70% at 8% 85%, rgba(201,168,76,.05) 0%, transparent 50%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,.035) 1px, transparent 1px);
+      background-size: 58px 58px;
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: center;
+      max-width: 1200px; width: 100%; margin: 0 auto;
+    }
+    .hero-eyebrow {
+      font-size: .68rem; font-weight: 600; letter-spacing: .25em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 1.1rem;
+      display: flex; align-items: center; gap: .7rem;
+    }
+    .hero-eyebrow::before { content: ''; display: block; width: 28px; height: 1px; background: var(--gold); }
+    h1 { font-family: var(--serif); font-size: clamp(2.8rem,5.5vw,5rem); font-weight: 600; line-height: 1.04; color: var(--text); }
+    h1 .brand { color: var(--gold); font-style: italic; }
+    .hero-sub { font-family: var(--serif); font-style: italic; font-size: clamp(1rem,1.8vw,1.35rem); color: var(--text-muted); margin: 1.1rem 0 1.8rem; line-height: 1.5; }
+    .hero-copy { font-size: .87rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 2.2rem; max-width: 430px; }
+    .hero-copy strong { color: var(--text); font-weight: 500; }
+    .hero-actions { display: flex; gap: .9rem; flex-wrap: wrap; }
+    .hero-logo-col { display: flex; align-items: center; justify-content: center; }
+    .hero-logo-col img { width: min(400px,90%); filter: drop-shadow(0 0 55px rgba(123,28,28,.48)); animation: floatY 7s ease-in-out infinite; }
+    @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-11px)} }
+    .hero-stats { display: flex; gap: 2.25rem; margin-top: 2.75rem; padding-top: 2.25rem; border-top: 1px solid rgba(201,168,76,.1); }
+    .stat-num { font-family: var(--serif); font-size: 1.85rem; font-weight: 700; color: var(--gold); line-height: 1; }
+    .stat-lbl { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); margin-top: .25rem; }
+    .quick-links { background: var(--dark2); padding: 2rem clamp(1.25rem,5vw,5rem); }
+    .quick-links-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 1rem; max-width: 1000px; margin: 0 auto; }
+    .ql-card {
+      background: var(--dark3); border: 1px solid rgba(255,255,255,.05); border-radius: var(--r);
+      padding: 1.5rem 1rem; color: var(--text); cursor: pointer;
+      transition: border-color .2s, transform .2s; text-align: center;
+    }
+    .ql-card:hover { border-color: rgba(201,168,76,.25); transform: translateY(-2px); }
+    .ql-icon { font-size: 1.55rem; margin-bottom: .5rem; }
+    .ql-title { font-family: var(--serif); font-size: .98rem; font-weight: 600; margin-bottom: .25rem; }
+    .ql-desc { font-size: .7rem; color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════
+       CATÁLOGO
+    ═══════════════════════════════════════ */
+    #page-catalogo { background: var(--dark2); }
+    .cat-filters { display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center; margin-bottom: 2.75rem; }
+    .filter-btn {
+      font-family: var(--sans); font-size: .7rem; font-weight: 500;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: .45rem 1.1rem; border-radius: var(--r);
+      border: 1px solid rgba(201,168,76,.2); background: transparent;
+      color: var(--text-muted); cursor: pointer; transition: all .18s;
+    }
+    .filter-btn:hover, .filter-btn.active { background: var(--bordo); border-color: var(--bordo-light); color: var(--gold); }
+
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,265px),1fr)); gap: 1.1rem; }
+
+    .cat-card {
+      background: var(--dark3); border: 1px solid rgba(255,255,255,.045); border-radius: var(--r);
+      overflow: hidden; transition: transform .22s, border-color .22s, box-shadow .22s; position: relative;
+    }
+    .cat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 0; background: var(--gold); transition: height .28s; }
+    .cat-card:hover { transform: translateY(-2px); border-color: rgba(201,168,76,.18); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+    .cat-card:hover::before { height: 100%; }
+
+    /* image zone */
+    .cat-img {
+      width: 100%; aspect-ratio: 4/3;
+      background: var(--dark4); display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+    .cat-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s; display: block; }
+    .cat-card:hover .cat-img img { transform: scale(1.04); }
+    .cat-img-placeholder {
+      display: flex; flex-direction: column; align-items: center; gap: .5rem;
+      color: rgba(201,168,76,.2); font-size: .6rem; letter-spacing: .1em;
+      text-transform: uppercase; text-align: center; padding: 1rem;
+      position: absolute; inset: 0; justify-content: center;
+    }
+    .cat-img-placeholder svg { width: 30px; height: 30px; opacity: .4; }
+
+    .cat-body { padding: 1.2rem; }
+    .cat-cat { font-size: .6rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--bordo-light); margin-bottom: .4rem; }
+    .cat-name { font-family: var(--serif); font-size: 1.08rem; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: .4rem; }
+    .cat-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.65; margin-bottom: .85rem; min-height: 2.4em; }
+    .cat-price { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; color: var(--gold); }
+    .cat-price-lbl { font-size: .6rem; color: var(--text-muted); letter-spacing: .04em; }
+
+    /* ═══════════════════════════════════════
+       COMBOS
+    ═══════════════════════════════════════ */
+    #page-combos { background: var(--dark); }
+
+    .combos-section-title {
+      display: flex; align-items: center; gap: 1rem;
+      font-family: var(--serif); font-size: 1.6rem; font-weight: 700; color: var(--text);
+      margin: 0 0 1.75rem;
+    }
+    .combos-section-badge {
+      font-family: var(--sans); font-size: .62rem; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase;
+      background: var(--bordo); color: var(--gold);
+      padding: .22rem .85rem; border-radius: var(--r);
+    }
+    .combos-section + .combos-section { margin-top: 4rem; padding-top: 3.5rem; border-top: 1px solid rgba(201,168,76,.1); }
+
+    .combos-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,330px),1fr)); gap: 1.25rem; }
+    .combo-card {
+      background: linear-gradient(140deg,var(--dark3) 0%,var(--dark2) 100%);
+      border: 1px solid rgba(201,168,76,.12); border-radius: var(--r);
+      padding: 1.75rem; position: relative; overflow: hidden;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+    }
+    .combo-card::after {
+      content: ''; position: absolute; bottom: 0; right: 0;
+      width: 110px; height: 110px;
+      background: radial-gradient(ellipse at 100% 100%, rgba(123,28,28,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .combo-card:hover { border-color: rgba(201,168,76,.32); transform: translateY(-2px); box-shadow: 0 14px 38px rgba(0,0,0,.5); }
+    .combo-badge {
+      display: inline-block; font-size: .6rem; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase;
+      background: var(--bordo); color: var(--gold);
+      padding: .2rem .65rem; border-radius: var(--r); margin-bottom: .85rem;
+    }
+    .combo-name { font-family: var(--serif); font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: .9rem; line-height: 1.2; }
+    .combo-items { list-style: none; margin-bottom: 1.1rem; }
+    .combo-items li {
+      font-size: .76rem; color: var(--text-muted); padding: .28rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      display: flex; gap: .55rem; align-items: flex-start; line-height: 1.5;
+    }
+    .combo-items li::before { content: '›'; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+    .combo-footer {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-top: 1.35rem; padding-top: 1.35rem; border-top: 1px solid rgba(201,168,76,.1);
+    }
+    .combo-price { font-family: var(--serif); font-size: 1.85rem; font-weight: 700; color: var(--gold); line-height: 1; }
+    .combo-price small { font-size: .65rem; font-family: var(--sans); color: var(--text-muted); display: block; margin-top: .2rem; }
+    .combo-wsp {
+      background: #25D366; color: #fff;
+      font-family: var(--sans); font-size: .72rem; font-weight: 600; letter-spacing: .04em;
+      padding: .5rem 1rem; border-radius: var(--r); text-decoration: none; transition: opacity .18s; white-space: nowrap;
+    }
+    .combo-wsp:hover { opacity: .85; }
+
+    /* ═══════════════════════════════════════
+       ESTUDIO FOTOGRÁFICO
+    ═══════════════════════════════════════ */
+    #page-estudio { background: var(--dark); }
+
+    .studio-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: start; margin-bottom: 3rem; }
+    .studio-text p { font-size: .88rem; color: var(--text-muted); line-height: 1.85; margin-top: 1rem; }
+    .studio-features-list { list-style: none; margin-top: 1.5rem; display: flex; flex-direction: column; gap: .6rem; }
+    .studio-features-list li { font-size: .84rem; color: var(--text-muted); display: flex; align-items: flex-start; gap: .65rem; }
+    .studio-features-list li::before { content: '›'; color: var(--gold); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .studio-features-list li strong { color: var(--text); font-weight: 500; }
+
+    /* gallery */
+    .studio-gallery { display: flex; flex-direction: column; gap: .75rem; }
+    .gallery-main-slot {
+      background: var(--dark3); border: 1px solid rgba(255,255,255,.06); border-radius: var(--r);
+      overflow: hidden; aspect-ratio: 16/9; position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    .gallery-row { display: grid; grid-template-columns: repeat(3,1fr); gap: .75rem; }
+    .gallery-slot {
+      background: var(--dark3); border: 1px solid rgba(255,255,255,.06); border-radius: var(--r);
+      overflow: hidden; aspect-ratio: 4/3; position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    .gallery-slot img, .gallery-main-slot img {
+      width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s;
+    }
+    .gallery-slot:hover img, .gallery-main-slot:hover img { transform: scale(1.04); }
+    .gallery-placeholder {
+      display: flex; flex-direction: column; align-items: center; gap: .6rem;
+      color: rgba(201,168,76,.2); font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; text-align: center; padding: 1rem;
+      position: absolute; inset: 0; justify-content: center;
+    }
+    .gallery-placeholder svg { width: 28px; height: 28px; opacity: .4; }
+    .gallery-placeholder .fname { font-size: .58rem; opacity: .5; margin-top: .2rem; }
+
+    /* studio features grid */
+    .studio-feat-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: 1rem; margin: 2.5rem 0; }
+    .studio-feat {
+      background: var(--dark3); border: 1px solid rgba(255,255,255,.045); border-radius: var(--r); padding: 1.35rem;
+    }
+    .studio-feat-icon { font-size: 1.5rem; margin-bottom: .6rem; }
+    .studio-feat-title { font-family: var(--serif); font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: .35rem; }
+    .studio-feat-desc { font-size: .77rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* pricing */
+    .studio-pricing {
+      background: var(--dark3); border: 1px solid rgba(201,168,76,.15); border-radius: var(--r);
+      padding: 2rem; max-width: 720px; margin: 0 auto 1rem;
+    }
+    .studio-pricing-title { font-family: var(--serif); font-size: 1.3rem; font-weight: 700; color: var(--gold); margin-bottom: .75rem; }
+    .studio-price-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .8rem 0; border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .studio-price-row:last-of-type { border-bottom: none; }
+    .studio-price-name { font-size: .88rem; color: var(--text); }
+    .studio-price-name small { display: block; font-size: .73rem; color: var(--text-muted); margin-top: .15rem; }
+    .studio-price-val { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; color: var(--gold); }
+
+    /* ═══════════════════════════════════════
+       CÓMO ALQUILAR
+    ═══════════════════════════════════════ */
+    #page-como { background: var(--dark2); }
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr));
+      gap: 0; max-width: 950px; margin: 0 auto; position: relative;
+    }
+    .steps-grid::before {
+      content: ''; position: absolute; top: 47px; left: 10%; right: 10%;
+      height: 1px; background: linear-gradient(90deg,transparent,var(--gold),transparent); opacity: .18; pointer-events: none;
+    }
+    .step-item { text-align: center; padding: 0 1.5rem 2rem; }
+    .step-num {
+      width: 54px; height: 54px; border-radius: 50%; background: var(--dark3); border: 2px solid var(--bordo);
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 1.1rem;
+      font-family: var(--serif); font-size: 1.45rem; font-weight: 700; color: var(--gold); position: relative; z-index: 1;
+    }
+    .step-title { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: .45rem; }
+    .step-desc { font-size: .8rem; color: var(--text-muted); line-height: 1.72; }
+
+    .alta-box {
+      max-width: 680px; margin: 3rem auto 0; background: var(--dark3);
+      border: 1px solid rgba(201,168,76,.15); border-radius: var(--r);
+      padding: 2rem; display: flex; gap: 1.5rem; align-items: flex-start;
+    }
+    .alta-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
+    .alta-title { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; color: var(--gold); margin-bottom: .4rem; }
+    .alta-desc { font-size: .82rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 1rem; }
+
+    /* ═══════════════════════════════════════
+       CONTRATO
+    ═══════════════════════════════════════ */
+    #page-contrato { background: var(--dark2); }
+    .contrato-wrap {
+      max-width: 800px; margin: 0 auto;
+      background: var(--dark3); border: 1px solid rgba(201,168,76,.12); border-radius: var(--r); overflow: hidden;
+    }
+    .contrato-header {
+      background: var(--dark4); padding: 1.75rem 2rem;
+      border-bottom: 1px solid rgba(201,168,76,.12);
+    }
+    .contrato-header h3 { font-family: var(--serif); font-size: 1.25rem; font-weight: 700; color: var(--text); }
+    .contrato-header p { font-size: .78rem; color: var(--text-muted); margin-top: .3rem; }
+    .contrato-body { padding: 2rem; }
+    .contrato-text { font-size: .83rem; line-height: 1.9; color: #bfb5a5; }
+    .contrato-text h4 {
+      font-family: var(--serif); font-size: 1rem; font-weight: 700; color: var(--gold);
+      margin: 1.75rem 0 .65rem; padding-bottom: .4rem; border-bottom: 1px solid rgba(201,168,76,.12);
+    }
+    .contrato-text h4:first-child { margin-top: 0; }
+    .contrato-text p { margin-bottom: .65rem; }
+    .contrato-text ul { padding-left: 1.1rem; margin-bottom: .65rem; }
+    .contrato-text li { margin-bottom: .35rem; }
+    .contrato-note {
+      margin-top: 2rem; padding: 1.1rem 1.25rem;
+      background: rgba(201,168,76,.06); border-left: 3px solid var(--gold);
+      border-radius: 0 var(--r) var(--r) 0; font-size: .8rem; color: var(--text-muted); line-height: 1.7;
+    }
+    .contrato-note strong { color: var(--gold); }
+
+    /* ═══════════════════════════════════════
+       FLOATING WhatsApp
+    ═══════════════════════════════════════ */
+    .wsp-float {
+      position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 700;
+      width: 54px; height: 54px; border-radius: 50%; background: #25D366;
+      text-decoration: none; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 18px rgba(37,211,102,.38);
+      transition: transform .22s, box-shadow .22s; cursor: pointer; border: none;
+    }
+    .wsp-float:hover { transform: scale(1.1); box-shadow: 0 6px 26px rgba(37,211,102,.5); }
+    .wsp-float svg { width: 26px; height: 26px; }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+    @media(max-width:860px){
+      .hero-content { grid-template-columns: 1fr; text-align: center; }
+      .hero-logo-col { order: -1; }
+      .hero-logo-col img { width: 200px; }
+      .hero-eyebrow { justify-content: center; }
+      .hero-copy { margin-left: auto; margin-right: auto; }
+      .hero-actions { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .studio-layout { grid-template-columns: 1fr; }
+      .gallery-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media(max-width:640px){
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .nav-links.mob-open {
+        display: flex; flex-direction: column; position: fixed;
+        top: var(--nav-h); left: 0; right: 0;
+        background: rgba(10,10,10,.98); padding: 1.25rem 1.5rem 1.75rem; gap: .25rem;
+        border-bottom: 1px solid rgba(201,168,76,.1);
+      }
+      .nav-links.mob-open li a { padding: .6rem .5rem; font-size: .8rem; }
+      .steps-grid::before { display: none; }
+      .steps-grid { max-width: 340px; }
+      .alta-box { flex-direction: column; }
+      .gallery-row { grid-template-columns: 1fr; }
+    }
+
+    /* ═══════════════════════════════════════
+       ANIMATIONS
+    ═══════════════════════════════════════ */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .fi  { animation: fadeUp .55s ease forwards; }
+    .fi1 { opacity:0; animation: fadeUp .55s .08s ease forwards; }
+    .fi2 { opacity:0; animation: fadeUp .55s .16s ease forwards; }
+    .fi3 { opacity:0; animation: fadeUp .55s .24s ease forwards; }
+    .fi4 { opacity:0; animation: fadeUp .55s .32s ease forwards; }
+    .fi5 { opacity:0; animation: fadeUp .55s .40s ease forwards; }
+
+    /* ── LOADING / ERROR STATES ── */
+    .sheet-loading {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1rem; padding: 3.5rem 1rem;
+      font-size: .85rem; color: var(--text-muted); letter-spacing: .05em;
+    }
+    .sheet-spinner {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid rgba(201,168,76,.2);
+      border-top-color: var(--gold);
+      animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .sheet-error {
+      max-width: 520px; margin: 2rem auto;
+      background: rgba(123,28,28,.15); border: 1px solid rgba(123,28,28,.4);
+      border-radius: var(--r); padding: 1.25rem 1.5rem;
+      font-size: .82rem; color: #e8a0a0; line-height: 1.6;
+    }
+    .sheet-error strong { display: block; margin-bottom: .35rem; color: #f0b0b0; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav id="main-nav">
+  <button class="nav-logo" onclick="showPage('home')">
+    <img src="img/logo.png" alt="Ullathorpe" onerror="this.style.display='none'" />
+    <span class="nav-logo-name">Ullathorpe</span>
+  </button>
+  <ul class="nav-links" id="nav-links">
+    <li><a onclick="showPage('home')"      id="nav-home"     >Inicio</a></li>
+    <li><a onclick="showPage('catalogo')"  id="nav-catalogo" >Catálogo</a></li>
+    <li><a onclick="showPage('combos')"    id="nav-combos"   >Combos</a></li>
+    <li><a onclick="showPage('estudio')"   id="nav-estudio"  >Estudio</a></li>
+    <li><a onclick="showPage('como')"      id="nav-como"     >Cómo alquilar</a></li>
+    <li><a onclick="showPage('contrato')"  id="nav-contrato" >Contrato</a></li>
+    <li><a onclick="openWsp()"             class="nav-cta"   >Reservar</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ════════════════════════════════════════
+     HOME
+════════════════════════════════════════ -->
+<div class="page-section active" id="page-home">
+  <div class="hero-wrap">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="hero-eyebrow fi">Parque Chacabuco · CABA · Argentina</div>
+        <h1 class="fi1"><span class="brand">Ullathorpe</span><br/>Rental</h1>
+        <p class="hero-sub fi2">Alquiler de equipos audiovisuales</p>
+        <p class="hero-copy fi3"><strong>Cámaras, lentes, iluminación y sonido</strong> por jornada de 23 hs.<br/>Precios en pesos argentinos, sin IVA.<br/>Reservas exclusivamente por WhatsApp.</p>
+        <div class="hero-actions fi4">
+          <button class="btn-primary" onclick="showPage('catalogo')">Ver catálogo</button>
+          <button class="btn-secondary" onclick="openWsp()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+            WhatsApp
+          </button>
+        </div>
+        <div class="hero-stats fi5">
+          <div><div class="stat-num">23hs</div><div class="stat-lbl">Por jornada</div></div>
+          <div><div class="stat-num">+40</div><div class="stat-lbl">Equipos</div></div>
+          <div><div class="stat-num">CABA</div><div class="stat-lbl">Pque. Chacabuco</div></div>
+        </div>
+      </div>
+      <div class="hero-logo-col fi3">
+        <img src="img/logo.png" alt="Ullathorpe Rental" onerror="this.style.opacity='.08'" />
+      </div>
+    </div>
+  </div>
+
+  <div class="quick-links">
+    <div class="quick-links-grid">
+      <div class="ql-card" onclick="showPage('catalogo')"><div class="ql-icon">🎥</div><div class="ql-title">Catálogo</div><div class="ql-desc">Cámaras, lentes, iluminación, sonido</div></div>
+      <div class="ql-card" onclick="showPage('combos')"><div class="ql-icon">📦</div><div class="ql-title">Combos</div><div class="ql-desc">Kits armados de video y sonido</div></div>
+      <div class="ql-card" onclick="showPage('estudio')"><div class="ql-icon">📸</div><div class="ql-title">Estudio</div><div class="ql-desc">Estudio fotográfico con fondos y luz</div></div>
+      <div class="ql-card" onclick="showPage('como')"><div class="ql-icon">📋</div><div class="ql-title">Cómo alquilar</div><div class="ql-desc">Paso a paso, sin complicaciones</div></div>
+    </div>
+  </div>
+
+  <div id="contact-slot-home"></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     CATÁLOGO
+════════════════════════════════════════ -->
+<div class="page-section" id="page-catalogo">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="eyebrow">Equipamiento profesional</div>
+      <h2>Nuestro <em>Catálogo</em></h2>
+      <div class="ornament"><span class="ornament-diamond"></span></div>
+      <p class="section-desc">Precios por jornada de 23 hs, en pesos argentinos, sin IVA. Actualizados a febrero 2026.</p>
+    </div>
+    <div class="cat-filters">
+      <button class="filter-btn active" data-cat="all">Todos</button>
+      <button class="filter-btn" data-cat="camaras">Cámaras</button>
+      <button class="filter-btn" data-cat="lentes">Lentes</button>
+      <button class="filter-btn" data-cat="accesorios">Accesorios</button>
+      <button class="filter-btn" data-cat="video">Video & Foto</button>
+      <button class="filter-btn" data-cat="iluminacion">Iluminación</button>
+      <button class="filter-btn" data-cat="sonido">Sonido</button>
+    </div>
+    <div class="cat-grid" id="cat-grid"></div>
+  </div>
+  <div id="contact-slot-catalogo"></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     COMBOS
+════════════════════════════════════════ -->
+<div class="page-section" id="page-combos">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="eyebrow">Kits armados</div>
+      <h2><em>Combos</em> para tu producción</h2>
+      <div class="ornament"><span class="ornament-diamond"></span></div>
+      <p class="section-desc">Todo lo que necesitás en un solo paquete. Consultanos si querés armar un combo a medida.</p>
+    </div>
+
+    <!-- Combos se renderizan dinámicamente desde Google Sheets -->
+    <div id="combos-container">
+      <div class="sheet-loading" id="combos-loading">
+        <div class="sheet-spinner"></div>
+        <span>Cargando combos...</span>
+      </div>
+      <div class="sheet-error" id="combos-error" style="display:none"></div>
+    </div>
+  </div>
+  <div id="contact-slot-combos"></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ESTUDIO FOTOGRÁFICO
+════════════════════════════════════════ -->
+<div class="page-section" id="page-estudio">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="eyebrow">Flores, CABA</div>
+      <h2>Alquiler de <em>Estudio Fotográfico</em></h2>
+      <div class="ornament"><span class="ornament-diamond"></span></div>
+    </div>
+
+    <div class="studio-layout">
+      <div class="studio-text">
+        <p>Un espacio pensado para producciones fotográficas y audiovisuales en el barrio de Flores, CABA. Equipado para que llegués y te pongas a trabajar sin vueltas.</p>
+        <ul class="studio-features-list">
+          <li><strong>Luz continua con softbox</strong> — Iluminación difusa lista para usar</li>
+          <li><strong>Luz alternativa</strong> — Segunda fuente para composiciones más complejas</li>
+          <li><strong>Fondo infinito blanco</strong> — Para retratos, productos y moda</li>
+          <li><strong>Fondo infinito negro</strong> — Para looks dramáticos y alto contraste</li>
+          <li><strong>Fondo croma (verde)</strong> — Para chroma key y postproducción</li>
+        </ul>
+        <div style="margin-top:1.75rem;">
+          <button class="btn-primary" onclick="openWsp('Hola! Quiero consultar disponibilidad del estudio fotográfico en Flores.')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+            Consultar disponibilidad
+          </button>
+        </div>
+      </div>
+
+      <!-- GALERÍA
+           Subí las fotos del estudio a img/estudio/ en tu repo de GitHub.
+           Nombres esperados: estudio-main.jpg, estudio-2.jpg, estudio-3.jpg,
+           estudio-4.jpg, estudio-5.jpg
+      -->
+      <div class="studio-gallery">
+        <div class="gallery-main-slot">
+          <img src="img/estudio/estudio-main.jpg" alt="Estudio fotográfico Ullathorpe"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+          <div class="gallery-placeholder" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            Foto principal del estudio
+            <span class="fname">img/estudio/estudio-main.jpg</span>
+          </div>
+        </div>
+        <div class="gallery-row">
+          <div class="gallery-slot">
+            <img src="img/estudio/estudio-2.jpg" alt="Estudio fondo blanco"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <div class="gallery-placeholder" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              Fondo blanco<span class="fname">estudio-2.jpg</span>
+            </div>
+          </div>
+          <div class="gallery-slot">
+            <img src="img/estudio/estudio-3.jpg" alt="Estudio fondo negro"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <div class="gallery-placeholder" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              Fondo negro<span class="fname">estudio-3.jpg</span>
+            </div>
+          </div>
+          <div class="gallery-slot">
+            <img src="img/estudio/estudio-4.jpg" alt="Estudio croma verde"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <div class="gallery-placeholder" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              Croma verde<span class="fname">estudio-4.jpg</span>
+            </div>
+          </div>
+          <div class="gallery-slot">
+            <img src="img/estudio/estudio-5.jpg" alt="Iluminación"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <div class="gallery-placeholder" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              Iluminación<span class="fname">estudio-5.jpg</span>
+            </div>
+          </div>
+          <div class="gallery-slot">
+            <img src="img/estudio/estudio-6.jpg" alt="Detalle equipamiento"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <div class="gallery-placeholder" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              Equipamiento<span class="fname">estudio-6.jpg</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="studio-feat-grid">
+      <div class="studio-feat"><div class="studio-feat-icon">💡</div><div class="studio-feat-title">Luz continua + softbox</div><div class="studio-feat-desc">Iluminación suave y difusa, ideal para retratos y productos.</div></div>
+      <div class="studio-feat"><div class="studio-feat-icon">🔦</div><div class="studio-feat-title">Luz alternativa</div><div class="studio-feat-desc">Segunda fuente de luz para jugar con dirección y profundidad.</div></div>
+      <div class="studio-feat"><div class="studio-feat-icon">⬜</div><div class="studio-feat-title">Fondo blanco infinito</div><div class="studio-feat-desc">Clásico para e-commerce, moda y retratos limpios.</div></div>
+      <div class="studio-feat"><div class="studio-feat-icon">⬛</div><div class="studio-feat-title">Fondo negro infinito</div><div class="studio-feat-desc">Para composiciones dramáticas y alto contraste.</div></div>
+      <div class="studio-feat"><div class="studio-feat-icon">🟩</div><div class="studio-feat-title">Fondo croma verde</div><div class="studio-feat-desc">Para chroma key y postproducción con fondos virtuales.</div></div>
+      <div class="studio-feat"><div class="studio-feat-icon">📍</div><div class="studio-feat-title">Flores, CABA</div><div class="studio-feat-desc">Fácil acceso. Coordinamos horario y entrega por WhatsApp.</div></div>
+    </div>
+
+    <div class="section-header" style="margin-top:1rem;margin-bottom:1.5rem;">
+      <div class="eyebrow">Tarifas</div>
+      <h2>Precios del <em>Estudio</em></h2>
+      <div class="ornament"><span class="ornament-diamond"></span></div>
+      <p class="section-desc">En pesos argentinos, sin IVA. Consultá por WhatsApp ya que los precios se actualizan frecuentemente.</p>
+    </div>
+
+    <div class="studio-pricing">
+      <div class="studio-pricing-title">Alquiler de Estudio Fotográfico — Flores, CABA</div>
+      <div class="studio-price-row">
+        <div class="studio-price-name">Jornada completa (4 hs)<small>Incluye todos los fondos y equipamiento de iluminación</small></div>
+        <div class="studio-price-val">Consultar</div>
+      </div>
+      <div class="studio-price-row">
+        <div class="studio-price-name">Media jornada (2 hs)<small>Incluye todos los fondos y equipamiento de iluminación</small></div>
+        <div class="studio-price-val">Consultar</div>
+      </div>
+      <div class="studio-price-row">
+        <div class="studio-price-name">Hora adicional<small>Por hora extra sobre la jornada contratada</small></div>
+        <div class="studio-price-val">Consultar</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:1.75rem;">
+      <button class="btn-primary" onclick="openWsp('Hola! Quiero consultar disponibilidad y precio del estudio fotográfico en Flores.')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Consultar disponibilidad
+      </button>
+    </div>
+  </div>
+  <div id="contact-slot-estudio"></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     CÓMO ALQUILAR
+════════════════════════════════════════ -->
+<div class="page-section" id="page-como">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="eyebrow">Simple y rápido</div>
+      <h2>¿Cómo <em>alquilar</em>?</h2>
+      <div class="ornament"><span class="ornament-diamond"></span></div>
+      <p class="section-desc">Todo se gestiona por WhatsApp. Sin formularios complicados, sin vueltas.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-item"><div class="step-num">1</div><div class="step-title">Elegí tu equipo</div><p class="step-desc">Revisá el catálogo y anotá los equipos que necesitás para tu producción.</p></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-title">Consultá disponibilidad</div><p class="step-desc">Escribinos por WhatsApp al <strong style="color:var(--gold)">011-3030-1420</strong> con la fecha y los equipos que te interesan.</p></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-title">Confirmá la reserva</div><p class="step-desc">Acordamos los detalles, te enviamos el contrato y coordinamos entrega y devolución.</p></div>
+      <div class="step-item"><div class="step-num">4</div><div class="step-title">¡A filmar!</div><p class="step-desc">Retirás el equipo y tenés 23 hs para darle con todo. Así nomás.</p></div>
+    </div>
+
+    <div class="alta-box">
+      <div class="alta-icon">📋</div>
+      <div>
+        <div class="alta-title">¿Es tu primera vez alquilando con nosotros?</div>
+        <p class="alta-desc">Si es tu primer alquiler, necesitamos que completes un <strong>Formulario de Alta</strong> con tus datos. Solo se hace una vez y tarda menos de 2 minutos.</p>
+        <a href="https://forms.gle/zLeecpawquhxConz8" target="_blank" rel="noopener" class="btn-primary">Completar formulario de alta →</a>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:2.5rem;">
+      <button class="btn-primary" onclick="openWsp('Hola! Quiero consultar por equipos disponibles.')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Escribinos por WhatsApp
+      </button>
+    </div>
+  </div>
+  <div id="contact-slot-como"></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     CONTRATO
+════════════════════════════════════════ -->
+<div class="page-section" id="page-contrato">
+  <div class="section-wrap">
+    <div class="section-header">
+      <div class="eyebrow">Transparencia total</div>
+      <h2>Nuestro <em>Contrato</em></h2>
+      <div class="ornament"><span class="ornament-diamond"></span></div>
+      <p class="section-desc">Sin letra chica. Leé el contrato completo antes de alquilar.</p>
+    </div>
+    <div class="contrato-wrap">
+      <div class="contrato-header">
+        <h3>Contrato de Locación de Bienes Muebles No Fungibles</h3>
+        <p>Ullathorpe Rental · Parque Chacabuco, CABA, Argentina</p>
+      </div>
+      <div class="contrato-body">
+        <div class="contrato-text">
+          <h4>Partes</h4>
+          <p>Entre <strong>ULLATHORPE RENTAL</strong> (en adelante, <em>el Locador</em>), con domicilio en Parque Chacabuco, Ciudad Autónoma de Buenos Aires, y la persona que figure como locatario en la planilla de alquiler (en adelante, <em>el Locatario</em>), se celebra el presente Contrato de Locación de Bienes Muebles No Fungibles, sujeto a las siguientes cláusulas y condiciones:</p>
+          <h4>Artículo 1 — Objeto del contrato</h4>
+          <p>El Locador cede en locación al Locatario el/los equipo/s audiovisual/es detallado/s en la planilla de alquiler adjunta, por el período y precio acordados. Los equipos son bienes muebles no fungibles y se entregan en perfecto estado de funcionamiento.</p>
+          <h4>Artículo 2 — Precio y condiciones de pago</h4>
+          <p>El precio del alquiler es el acordado entre las partes y consignado en la planilla de alquiler. El pago se realiza en el momento de la entrega del equipo, salvo acuerdo previo por escrito. Los precios son en pesos argentinos y no incluyen IVA.</p>
+          <h4>Artículo 3 — Plazo de locación</h4>
+          <p>El plazo de locación es de 23 (veintitrés) horas, contadas desde el momento de la entrega del equipo al Locatario, salvo que se acuerde un período diferente por escrito. La devolución fuera de término habilitará al Locador a cobrar una jornada adicional por cada 23 horas o fracción de retraso.</p>
+          <h4>Artículo 4 — Responsabilidad por daños y pérdidas</h4>
+          <p>El Locatario se hace responsable de los equipos desde el momento de la entrega hasta su devolución completa al Locador. En caso de daño parcial o total, robo, pérdida o extravío del equipo o cualquiera de sus accesorios, el Locatario deberá abonar el costo de reparación o reposición del bien afectado, según cotización del mercado al momento del hecho.</p>
+          <p>El Locatario no podrá alegar caso fortuito o fuerza mayor para eximirse de esta responsabilidad, salvo acuerdo expreso del Locador.</p>
+          <h4>Artículo 5 — Uso del equipo</h4>
+          <p>El Locatario se compromete a utilizar los equipos exclusivamente para los fines acordados y de acuerdo a las instrucciones del fabricante. Queda prohibido:</p>
+          <ul>
+            <li>Ceder, subalquilar o prestar el equipo a terceros sin autorización escrita del Locador.</li>
+            <li>Realizar modificaciones, reparaciones o intervenciones técnicas sobre el equipo.</li>
+            <li>Utilizar el equipo en condiciones ambientales extremas (lluvia, polvo, temperaturas extremas) sin las protecciones adecuadas.</li>
+          </ul>
+          <h4>Artículo 6 — Entrega y devolución</h4>
+          <p>La entrega y devolución se realizará en el domicilio del Locador, salvo acuerdo en contrario. Al momento de la entrega, ambas partes verificarán el estado del equipo y sus accesorios. El Locatario firmará la planilla de conformidad. En caso de detectarse daños no presentes al momento de la entrega, se aplicará el Artículo 4.</p>
+          <h4>Artículo 7 — Garantía</h4>
+          <p>El Locatario podrá ser requerido a dejar una garantía en efectivo o por otro medio acordado. Dicha garantía será devuelta una vez verificado el buen estado del equipo al momento de la devolución.</p>
+          <h4>Artículo 8 — Incumplimiento</h4>
+          <p>El incumplimiento de cualquiera de las obligaciones asumidas habilitará al Locador a exigir el cumplimiento forzado, la resolución del contrato y/o el resarcimiento de daños y perjuicios, según corresponda.</p>
+          <h4>Artículo 9 — Jurisdicción</h4>
+          <p>Las partes se someten a la jurisdicción de los Tribunales Ordinarios de la Ciudad Autónoma de Buenos Aires, renunciando a cualquier otro fuero que pudiera corresponderles.</p>
+          <h4>Artículo 10 — Conformidad</h4>
+          <p>La firma de la planilla de alquiler implica la lectura, comprensión y aceptación de todas las cláusulas del presente contrato.</p>
+          <div class="contrato-note">¿Tenés alguna pregunta sobre el contrato? Escribinos antes de alquilar.<br/><strong>WhatsApp: 011-3030-1420</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="contact-slot-contrato"></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     FLOATING WhatsApp
+════════════════════════════════════════ -->
+<a class="wsp-float" href="https://wa.me/5491130301420?text=Hola%21+Quiero+consultar+por+equipos+disponibles." target="_blank" rel="noopener" title="Escribinos por WhatsApp">
+  <svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+</a>
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════ -->
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CONFIGURACIÓN — editá solo estas líneas
+
+   IMG_BASE: carpeta local o URL raw de GitHub donde están las fotos
+   del catálogo.  Cada ítem del sheet debe tener en la columna "img"
+   el nombre de archivo exacto (ej: sony-a6600.jpg).
+
+   Ejemplo GitHub raw:
+   'https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/img/catalogo/'
+══════════════════════════════════════════════════════════════ */
+const IMG_BASE = 'img/catalogo/';
+
+/* URLs públicas de Google Sheets (Archivo → Compartir → Publicar en la web) */
+const SHEET_CATALOGO_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrkO59tIJIoo4cWllZAv0DDmf0AhsMdo4Gl3xSD73zMQqF81K11yRihYrWJJN0T9vAwFk_LgWnYHLU/pub?gid=972536254&single=true&output=csv';
+
+const SHEET_COMBOS_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrkO59tIJIoo4cWllZAv0DDmf0AhsMdo4Gl3xSD73zMQqF81K11yRihYrWJJN0T9vAwFk_LgWnYHLU/pub?gid=1902386512&single=true&output=tsv';
+
+
+/* ══════════════════════════════════════════════════════════════
+   CSV / TSV PARSER
+   Maneja comillas dobles y comas dentro de campos (RFC 4180).
+══════════════════════════════════════════════════════════════ */
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]);
+  return lines.slice(1)
+    .map(line => {
+      const vals = parseCSVLine(line);
+      const obj = {};
+      headers.forEach((h, i) => { obj[h.trim()] = (vals[i] || '').trim(); });
+      return obj;
+    })
+    .filter(row => Object.values(row).some(v => v !== ''));
+}
+
+function parseTSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split('\t').map(h => h.trim());
+  return lines.slice(1)
+    .map(line => {
+      const vals = line.split('\t');
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
+      return obj;
+    })
+    .filter(row => Object.values(row).some(v => v !== ''));
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      result.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SHARED UTILS
+══════════════════════════════════════════════════════════════ */
+const CAT_LABELS = {
+  camaras:'Cámaras', lentes:'Lentes', accesorios:'Accesorios',
+  video:'Video & Foto', iluminacion:'Iluminación', sonido:'Sonido'
+};
+
+// Normaliza el valor de categoría que viene del sheet
+// a la clave interna usada en los filtros
+function normalizeCategory(raw) {
+  const map = {
+    'camaras':'camaras','cámaras':'camaras','camara':'camaras','cámara':'camaras',
+    'lentes':'lentes','lente':'lentes',
+    'accesorios':'accesorios','accesorio':'accesorios',
+    'video':'video','video & foto':'video','video&foto':'video','foto':'video',
+    'iluminacion':'iluminacion','iluminación':'iluminacion',
+    'sonido':'sonido',
+  };
+  return map[(raw || '').toLowerCase().trim()] || (raw || '').toLowerCase().trim();
+}
+
+const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="width:28px;height:28px;opacity:.35">
+  <rect x="3" y="3" width="18" height="18" rx="2"/>
+  <circle cx="8.5" cy="8.5" r="1.5"/>
+  <path d="m21 15-5-5L5 21"/>
+</svg>`;
+
+/* ══════════════════════════════════════════════════════════════
+   CATÁLOGO — fetch desde Google Sheets CSV
+   Columnas esperadas en el sheet (insensible a mayúsculas/tildes):
+     categoria | nombre | descripcion | precio | img
+   "img" es opcional — si está vacío se muestra placeholder.
+══════════════════════════════════════════════════════════════ */
+let catalogData = [];       // se llena con el fetch
+let currentFilter = 'all';
+
+async function loadCatalog() {
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = `<div class="sheet-loading" style="grid-column:1/-1"><div class="sheet-spinner"></div><span>Cargando catálogo...</span></div>`;
+
+  try {
+    const res = await fetch(SHEET_CATALOGO_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = parseCSV(text);
+
+    if (rows.length === 0) throw new Error('El sheet está vacío o no tiene datos.');
+
+    // Mapeamos las columnas de forma flexible
+    // Buscamos los encabezados reales (insensible a tildes/mayúsculas)
+    const keyMap = buildKeyMap(rows[0]);
+
+    catalogData = rows.map(row => ({
+      cat:   normalizeCategory(row[keyMap.categoria] || row[keyMap.cat] || ''),
+      name:  row[keyMap.nombre]      || row[keyMap.name]        || '',
+      desc:  row[keyMap.descripcion] || row[keyMap.description] || row[keyMap.desc] || '',
+      price: row[keyMap.precio]      || row[keyMap.price]       || '',
+      img:   row[keyMap.img]         || row[keyMap.imagen]      || '',
+    })).filter(r => r.name);
+
+    renderCatalog('all');
+    rebuildFilters();
+
+  } catch (err) {
+    grid.innerHTML = `
+      <div class="sheet-error" style="grid-column:1/-1">
+        <strong>No se pudo cargar el catálogo.</strong>
+        Revisá que el Google Sheet esté publicado como CSV y sea de acceso público.<br/>
+        <small style="opacity:.6;margin-top:.4rem;display:block">Error: ${err.message}</small>
+      </div>`;
+    console.error('[Catálogo]', err);
+  }
+}
+
+// Crea un mapa { nombre_esperado → clave_real_del_objeto } insensible a tildes/mayúsculas
+function buildKeyMap(firstRow) {
+  const normalize = s => (s || '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const map = {};
+  Object.keys(firstRow).forEach(k => {
+    map[normalize(k)] = k;
+  });
+  return map;
+}
+
+function renderCatalog(filter) {
+  currentFilter = filter;
+  const grid = document.getElementById('cat-grid');
+  const items = filter === 'all' ? catalogData : catalogData.filter(i => i.cat === filter);
+
+  if (items.length === 0) {
+    grid.innerHTML = `<p style="color:var(--text-muted);font-size:.85rem;grid-column:1/-1;text-align:center;padding:2rem">Sin equipos en esta categoría.</p>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(item => `
+    <div class="cat-card" data-cat="${item.cat}">
+      <div class="cat-img">
+        ${item.img
+          ? `<img src="${IMG_BASE + item.img}" alt="${escHtml(item.name)}" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+             <div class="cat-img-placeholder" style="display:none;">
+               ${PLACEHOLDER_SVG}
+               <span style="font-size:.58rem;opacity:.4;margin-top:.25rem">${escHtml(item.img)}</span>
+             </div>`
+          : `<div class="cat-img-placeholder">
+               ${PLACEHOLDER_SVG}
+               <span style="font-size:.6rem;opacity:.35">sin imagen</span>
+             </div>`
+        }
+      </div>
+      <div class="cat-body">
+        <div class="cat-cat">${CAT_LABELS[item.cat] || item.cat}</div>
+        <div class="cat-name">${escHtml(item.name)}</div>
+        <div class="cat-desc">${escHtml(item.desc) || '&nbsp;'}</div>
+        <div class="cat-price">${escHtml(item.price)}</div>
+        <div class="cat-price-lbl">por jornada · sin IVA</div>
+      </div>
+    </div>`).join('');
+}
+
+function rebuildFilters() {
+  // Detecta qué categorías existen en los datos y activa solo esas
+  const existing = new Set(catalogData.map(i => i.cat));
+  document.querySelectorAll('.filter-btn[data-cat]').forEach(btn => {
+    const cat = btn.dataset.cat;
+    btn.style.display = (cat === 'all' || existing.has(cat)) ? '' : 'none';
+  });
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COMBOS — fetch desde Google Sheets TSV
+   Columnas esperadas:
+     tipo | nombre | items | precio
+   - "tipo"   → VIDEO o SONIDO (o similar)
+   - "nombre" → nombre del combo
+   - "items"  → lista de ítems separada por "|"  (ej: "Cámara Sony|Lente Sony")
+   - "precio" → precio formateado (ej: $96.000)
+   - "nivel"  → badge del combo (ej: Newbie, Intermedio…) [opcional]
+══════════════════════════════════════════════════════════════ */
+async function loadCombos() {
+  const container = document.getElementById('combos-container');
+  const loadingEl = document.getElementById('combos-loading');
+  const errorEl   = document.getElementById('combos-error');
+
+  try {
+    const res = await fetch(SHEET_COMBOS_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = parseTSV(text);
+
+    if (rows.length === 0) throw new Error('El sheet de combos está vacío.');
+
+    const keyMap = buildKeyMap(rows[0]);
+
+    const combos = rows.map(row => ({
+      tipo:   (row[keyMap.tipo]   || row[keyMap.type]     || row[keyMap.categoria] || 'otro').trim(),
+      nombre: (row[keyMap.nombre] || row[keyMap.name]     || row[keyMap.combo]     || '').trim(),
+      items:  (row[keyMap.items]  || row[keyMap.contenido]|| row[keyMap.detalle]   || '').trim(),
+      precio: (row[keyMap.precio] || row[keyMap.price]    || '').trim(),
+      nivel:  (row[keyMap.nivel]  || row[keyMap.badge]    || row[keyMap.nivel]     || '').trim(),
+    })).filter(c => c.nombre);
+
+    // Agrupamos por tipo (VIDEO / SONIDO / etc.)
+    const grupos = {};
+    combos.forEach(c => {
+      const key = c.tipo.toUpperCase();
+      if (!grupos[key]) grupos[key] = [];
+      grupos[key].push(c);
+    });
+
+    // Renderizamos
+    loadingEl.style.display = 'none';
+
+    let html = '';
+    let isFirst = true;
+
+    // Orden preferido: VIDEO primero, SONIDO segundo, resto al final
+    const ORDER = ['VIDEO','SONIDO'];
+    const orderedKeys = [
+      ...ORDER.filter(k => grupos[k]),
+      ...Object.keys(grupos).filter(k => !ORDER.includes(k))
+    ];
+
+    orderedKeys.forEach(tipo => {
+      const badge = tipo.charAt(0) + tipo.slice(1).toLowerCase();
+      const divider = isFirst ? '' : 'combos-section + .combos-section { margin-top:4rem; padding-top:3.5rem; border-top:1px solid rgba(201,168,76,.1); }';
+      html += `
+        <div class="combos-section" ${isFirst ? '' : 'style="margin-top:4rem;padding-top:3.5rem;border-top:1px solid rgba(201,168,76,.1)"'}>
+          <div class="combos-section-title">
+            <span class="combos-section-badge">${escHtml(badge)}</span>
+            Combos de ${escHtml(badge)}
+          </div>
+          <div class="combos-grid">
+            ${grupos[tipo].map(c => renderComboCard(c)).join('')}
+          </div>
+        </div>`;
+      isFirst = false;
+    });
+
+    container.insertAdjacentHTML('beforeend', html);
+
+  } catch (err) {
+    loadingEl.style.display = 'none';
+    errorEl.style.display = '';
+    errorEl.innerHTML = `<strong>No se pudieron cargar los combos.</strong>
+      Revisá que el Google Sheet esté publicado y sea de acceso público.<br/>
+      <small style="opacity:.6;margin-top:.4rem;display:block">Error: ${err.message}</small>`;
+    console.error('[Combos]', err);
+  }
+}
+
+function renderComboCard(c) {
+  const wsp = `https://wa.me/5491130301420?text=${encodeURIComponent(`Hola! Me interesa el ${c.nombre}. ¿Tenés disponibilidad?`)}`;
+  // Los ítems vienen separados por "|" en el sheet
+  const itemList = c.items
+    ? c.items.split('|').map(i => i.trim()).filter(Boolean)
+        .map(i => `<li>${escHtml(i)}</li>`).join('')
+    : '';
+
+  const badge = c.nivel || (c.tipo.charAt(0) + c.tipo.slice(1).toLowerCase());
+
+  return `
+    <div class="combo-card">
+      <span class="combo-badge">${escHtml(badge)}</span>
+      <div class="combo-name">${escHtml(c.nombre)}</div>
+      ${itemList ? `<ul class="combo-items">${itemList}</ul>` : ''}
+      <div class="combo-footer">
+        <div class="combo-price">${escHtml(c.precio)}<small>por jornada · sin IVA</small></div>
+        <a class="combo-wsp" href="${wsp}" target="_blank" rel="noopener">Reservar</a>
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════
+   CONTACT BLOCK — se inyecta en cada página
+══════════════════════════════════════ */
+function buildContactBlock() {
+  return `
+  <div class="contact-block">
+    <div class="inner">
+      <div class="section-header">
+        <div class="eyebrow">Estamos para ayudarte</div>
+        <h2>¿<em>Charlamos</em>?</h2>
+        <div class="ornament"><span class="ornament-diamond"></span></div>
+        <p class="section-desc">Reservas y pedidos exclusivamente por WhatsApp. También podés seguirnos en Instagram.</p>
+      </div>
+      <div class="contact-cards">
+        <div class="contact-card" onclick="openWsp()">
+          <div class="ci">💬</div><div class="cl">WhatsApp</div><div class="cv">011-3030-1420</div>
+        </div>
+        <a class="contact-card" href="https://www.instagram.com/ullathorpe.rental" target="_blank" rel="noopener">
+          <div class="ci">📸</div><div class="cl">Instagram</div><div class="cv">@ullathorpe.rental</div>
+        </a>
+        <a class="contact-card" href="mailto:ullathorperental@gmail.com">
+          <div class="ci">✉️</div><div class="cl">Email</div><div class="cv">ullathorperental@gmail.com</div>
+        </a>
+        <div class="contact-card" style="cursor:default;">
+          <div class="ci">📍</div><div class="cl">Ubicación</div><div class="cv">Parque Chacabuco, CABA</div>
+        </div>
+      </div>
+      <div class="contact-wsp-wrap">
+        <button class="wsp-big" onclick="openWsp('Hola! Quiero consultar por equipos disponibles.')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+          Escribinos por WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+  <footer class="site-footer">
+    <div class="footer-logo"><img src="img/logo.png" alt="Ullathorpe Rental" onerror="this.style.display='none'" /></div>
+    <div class="footer-tagline">"Acompañando a los profesionales desde sus inicios"</div>
+    <div class="footer-legal">© 2026 Ullathorpe Rental · Parque Chacabuco, CABA · Todos los precios en ARS sin IVA</div>
+  </footer>`;
+}
+
+/* ══════════════════════════════════════
+   SPA ENGINE
+══════════════════════════════════════ */
+const PAGES = ['home','catalogo','combos','estudio','como','contrato'];
+
+function showPage(id) {
+  // hide all, remove active nav
+  PAGES.forEach(p => {
+    document.getElementById('page-' + p).classList.remove('active');
+    const n = document.getElementById('nav-' + p);
+    if (n) n.classList.remove('active');
+  });
+
+  // show requested page
+  document.getElementById('page-' + id).classList.add('active');
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+
+  // scroll to top
+  window.scrollTo({ top: 0, behavior: 'instant' });
+
+  // inject contact block lazily
+  const slot = document.getElementById('contact-slot-' + id);
+  if (slot && !slot.dataset.filled) {
+    slot.innerHTML = buildContactBlock();
+    slot.dataset.filled = '1';
+  }
+
+  // close mobile menu
+  document.getElementById('nav-links').classList.remove('mob-open');
+}
+
+/* ══════════════════════════════════════
+   WHATSAPP
+══════════════════════════════════════ */
+function openWsp(msg) {
+  const text = encodeURIComponent(msg || 'Hola! Quiero consultar por equipos disponibles.');
+  window.open('https://wa.me/5491130301420?text=' + text, '_blank', 'noopener,noreferrer');
+}
+
+/* ══════════════════════════════════════
+   CATALOG FILTERS
+══════════════════════════════════════ */
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCatalog(btn.dataset.cat);
+  });
+});
+
+/* ══════════════════════════════════════
+   MOBILE MENU
+══════════════════════════════════════ */
+function toggleMenu() {
+  document.getElementById('nav-links').classList.toggle('mob-open');
+}
+
+/* ══════════════════════════════════════
+   NAV SCROLL
+══════════════════════════════════════ */
+window.addEventListener('scroll', () => {
+  document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+// Catálogo y Combos se cargan desde Google Sheets al iniciar
+loadCatalog();
+loadCombos();
+
+// Inyectar bloque de contacto en Home (activo al cargar)
+const homeSlot = document.getElementById('contact-slot-home');
+homeSlot.innerHTML = buildContactBlock();
+homeSlot.dataset.filled = '1';
+</script>
+</body>
+</html>

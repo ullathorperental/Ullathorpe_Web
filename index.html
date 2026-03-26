@@ -82,8 +82,9 @@
     .nav-logo-name {
       font-family: var(--serif); font-size: 1.1rem; font-weight: 600;
       letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
     }
-
+    
     .nav-links { display: flex; gap: 0; list-style: none; }
     .nav-links li a {
       display: block; font-size: .72rem; font-weight: 500;
@@ -195,9 +196,9 @@
     footer.site-footer {
       background: var(--dark2); border-top: 1px solid rgba(201,168,76,.08);
       padding: 2rem clamp(1.25rem,5vw,5rem);
-      display: flex; flex-direction: column; align-items: center; gap: 1rem; text-align: center;
+      display: flex; flex-direction: column; align-items: left; gap: 1rem; text-align: center;
     }
-    .footer-logo img { height: 52px; opacity: .75; }
+    .footer-logo img { height: 104px; opacity: .99; background: radial-gradient(ellipse at center, rgba(232,224,208,0.18) 0%, transparent 70%); border-radius: 50%; padding: 1.5rem; }
     .footer-tagline { font-family: var(--serif); font-style: italic; font-size: .95rem; color: var(--text-muted); }
     .footer-legal { font-size: .7rem; color: var(--text-muted); opacity: .55; letter-spacing: .04em; }
 
@@ -241,8 +242,7 @@
     .hero-copy strong { color: var(--text); font-weight: 500; }
     .hero-actions { display: flex; gap: .9rem; flex-wrap: wrap; }
     .hero-logo-col { display: flex; align-items: center; justify-content: center; }
-    .hero-logo-col img { width: min(400px,90%); filter: drop-shadow(0 0 55px rgba(123,28,28,.48)); animation: floatY 7s ease-in-out infinite; }
-    @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-11px)} }
+    .hero-logo-col img { width: min(400px,90%); filter: drop-shadow(0 0 55px rgba(123,28,28,.48)); animation: floatY 7s ease-in-out infinite; background: radial-gradient(ellipse at center, rgba(232,224,208,0.18) 0%, transparent 70%); border-radius: 50%; padding: 1.5rem; }
     .hero-stats { display: flex; gap: 2.25rem; margin-top: 2.75rem; padding-top: 2.25rem; border-top: 1px solid rgba(201,168,76,.1); }
     .stat-num { font-family: var(--serif); font-size: 1.85rem; font-weight: 700; color: var(--gold); line-height: 1; }
     .stat-lbl { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); margin-top: .25rem; }
@@ -565,7 +565,7 @@
 <!-- ═══════════ NAV ═══════════ -->
 <nav id="main-nav">
   <button class="nav-logo" onclick="showPage('home')">
-    <img src="img/logo.png" alt="Ullathorpe" onerror="this.style.display='none'" />
+    <img src="img/logo_leon.png" alt="Ullathorpe" onerror="this.style.display='none'" />
     <span class="nav-logo-name">Ullathorpe</span>
   </button>
   <ul class="nav-links" id="nav-links">

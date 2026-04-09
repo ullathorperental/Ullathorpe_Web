@@ -122,19 +122,12 @@ const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 </svg>`;
 
 /* ── Función para formatear e inyectar la fecha dinámica ── */
-function updateDateLabels(dateString) {
+function updateDateLabels() {
   const els = document.querySelectorAll('.last-update-label');
   
-  if (!dateString) {
-    // Si por políticas de seguridad del navegador Google oculta el header, mostramos un texto genérico
-    els.forEach(el => el.innerHTML = "Precios vigentes y actualizados");
-    return;
-  }
-  
-  const d = new Date(dateString);
-  if (isNaN(d)) return;
-  
+  const d = new Date(); // Toma la fecha de hoy
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  
   const text = `Actualizado a ${meses[d.getMonth()]} ${d.getFullYear()}`;
   
   els.forEach(el => el.innerHTML = text);

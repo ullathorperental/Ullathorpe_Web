@@ -121,6 +121,25 @@ const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentCol
   <path d="m21 15-5-5L5 21"/>
 </svg>`;
 
+/* ── Función para formatear e inyectar la fecha dinámica ── */
+function updateDateLabels(dateString) {
+  const els = document.querySelectorAll('.last-update-label');
+  
+  if (!dateString) {
+    // Si por políticas de seguridad del navegador Google oculta el header, mostramos un texto genérico
+    els.forEach(el => el.innerHTML = "Precios vigentes y actualizados");
+    return;
+  }
+  
+  const d = new Date(dateString);
+  if (isNaN(d)) return;
+  
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const text = `Actualizado a ${meses[d.getMonth()]} ${d.getFullYear()}`;
+  
+  els.forEach(el => el.innerHTML = text);
+}
+
 /* ══════════════════════════════════════════════════════════
    CATÁLOGO
    Columnas esperadas en el sheet (insensible a tildes/mayúsculas):
@@ -137,6 +156,11 @@ async function loadCatalog() {
   try {
     const res = await fetch(SHEET_CATALOGO_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    // 1. Extraemos la fecha de la última modificación del Sheet desde los headers HTTP
+    const lastMod = res.headers.get('Last-Modified');
+    updateDateLabels(lastMod); // 2. Actualizamos los textos en HTML
+
     const rows = parseCSV(await res.text());
     if (!rows.length) throw new Error('El sheet está vacío.');
 

@@ -97,15 +97,10 @@
         <span class="last-update-label"></span>
 	  </p>
     </div>
-    <div class="cat-filters">
-      <button class="filter-btn active" data-cat="all">Todos</button>
-      <button class="filter-btn" data-cat="camaras">Cámaras</button>
-      <button class="filter-btn" data-cat="lentes">Lentes</button>
-      <button class="filter-btn" data-cat="accesorios">Accesorios</button>
-      <button class="filter-btn" data-cat="video">Video & Foto</button>
-      <button class="filter-btn" data-cat="iluminacion">Iluminación</button>
-      <button class="filter-btn" data-cat="sonido">Sonido</button>
-    </div>
+	<div class="cat-filters" id="main-filters">
+	</div>
+    <div class="subcat-filters" id="subcat-filters" style="display:none;">
+	</div>
     <!-- Las cards se renderizan desde app.js → loadCatalog() -->
     <div class="cat-grid" id="cat-grid"></div>
   </div>

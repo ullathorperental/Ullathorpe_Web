@@ -82,26 +82,6 @@ function parseCSVLine(line) {
 /* ══════════════════════════════════════════════════════════
    UTILIDADES COMPARTIDAS
 ══════════════════════════════════════════════════════════ */
-const CAT_LABELS = {
-  camaras:    'Cámaras',
-  lentes:     'Lentes',
-  accesorios: 'Accesorios',
-  video:      'Video & Foto',
-  iluminacion:'Iluminación',
-  sonido:     'Sonido',
-};
-
-function normalizeCategory(raw) {
-  const map = {
-    'camaras':'camaras','cámaras':'camaras','camara':'camaras','cámara':'camaras',
-    'lentes':'lentes','lente':'lentes',
-    'accesorios':'accesorios','accesorio':'accesorios',
-    'video':'video','video & foto':'video','video&foto':'video','foto':'video',
-    'iluminacion':'iluminacion','iluminación':'iluminacion',
-    'sonido':'sonido',
-  };
-  return map[(raw || '').toLowerCase().trim()] || (raw || '').toLowerCase().trim();
-}
 
 /* Crea mapa { clave_normalizada → clave_real } insensible a tildes/mayúsculas */
 function buildKeyMap(firstRow) {
@@ -133,12 +113,13 @@ function updateDateLabels() {
   els.forEach(el => el.innerHTML = text);
 }
 
+
 /* ══════════════════════════════════════════════════════════
-   CATÁLOGO
-   Columnas esperadas en el sheet (insensible a tildes/mayúsculas):
-     categoria | nombre | descripcion | precio | img
+   CATÁLOGO (DINÁMICO DESDE GOOGLE SHEETS)
 ══════════════════════════════════════════════════════════ */
 let catalogData = [];
+let currentCat = 'all';
+let currentSubcat = 'all';
 
 async function loadCatalog() {
   const grid = document.getElementById('cat-grid');
@@ -150,24 +131,25 @@ async function loadCatalog() {
     const res = await fetch(SHEET_CATALOGO_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     
-    // 1. Extraemos la fecha de la última modificación del Sheet desde los headers HTTP
-    const lastMod = res.headers.get('Last-Modified');
-    updateDateLabels(lastMod); // 2. Actualizamos los textos en HTML
+    updateDateLabels(); // Fecha de hoy (sorteo de CORS)
 
     const rows = parseCSV(await res.text());
     if (!rows.length) throw new Error('El sheet está vacío.');
 
     const km = buildKeyMap(rows[0]);
+    
+    // Mapeo dinámico directo del Sheet
     catalogData = rows.map(row => ({
-      cat:   normalizeCategory(row[km.categoria] || row[km.cat] || ''),
-      name:  row[km.nombre]      || row[km.name]        || '',
-      desc:  row[km.descripcion] || row[km.description] || row[km.desc] || '',
-      price: row[km.precio]      || row[km.price]       || '',
-      img:   row[km.img]         || row[km.imagen]      || '',
+      cat:    (row[km.categoria] || row[km.cat] || 'Otros').trim(),
+      subcat: (row[km.subcategoria] || row[km.subcat] || '').trim(),
+      name:   (row[km.nombre] || row[km.name] || '').trim(),
+      desc:   (row[km.descripcion] || row[km.description] || row[km.desc] || '').trim(),
+      price:  (row[km.precio] || row[km.price] || '').trim(),
+      img:    (row[km.imagen] || row[km.img] || row[km['ruta imagen']] || '').trim(),
     })).filter(r => r.name);
 
-    renderCatalog('all');
-    rebuildFilters();
+    buildMainFilters();
+    renderCatalog();
 
   } catch (err) {
     grid.innerHTML = `<div class="sheet-error" style="grid-column:1/-1">
@@ -179,17 +161,87 @@ async function loadCatalog() {
   }
 }
 
-function renderCatalog(filter) {
+/* ── Generar botones principales ── */
+function buildMainFilters() {
+  const container = document.getElementById('main-filters');
+  if (!container) return;
+
+  const categories = [...new Set(catalogData.map(item => item.cat))].filter(Boolean);
+  let html = `<button class="filter-btn ${currentCat === 'all' ? 'active' : ''}" data-cat="all">Todos</button>`;
+  
+  categories.forEach(c => {
+    html += `<button class="filter-btn ${currentCat === c ? 'active' : ''}" data-cat="${escHtml(c)}">${escHtml(c)}</button>`;
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      currentCat = e.target.dataset.cat;
+      currentSubcat = 'all'; // Resetea la subcategoría al cambiar la principal
+      buildMainFilters();
+      renderCatalog();
+    });
+  });
+
+  buildSubFilters();
+}
+
+/* ── Generar botones de subcategoría ── */
+function buildSubFilters() {
+  const container = document.getElementById('subcat-filters');
+  if (!container) return;
+
+  // Si está en "Todos" ocultamos los filtros secundarios
+  if (currentCat === 'all') {
+    container.style.display = 'none';
+    return;
+  }
+
+  // Buscar las subcategorías únicas de la categoría actual
+  const subcats = [...new Set(catalogData.filter(i => i.cat === currentCat).map(i => i.subcat))].filter(Boolean);
+
+  if (subcats.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'flex';
+  let html = `<button class="subcat-btn ${currentSubcat === 'all' ? 'active' : ''}" data-subcat="all">Todas</button>`;
+  
+  subcats.forEach(sc => {
+    html += `<button class="subcat-btn ${currentSubcat === sc ? 'active' : ''}" data-subcat="${escHtml(sc)}">${escHtml(sc)}</button>`;
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll('.subcat-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      currentSubcat = e.target.dataset.subcat;
+      buildSubFilters();
+      renderCatalog();
+    });
+  });
+}
+
+/* ── Renderizar las Cards ── */
+function renderCatalog() {
   const grid = document.getElementById('cat-grid');
-  const items = filter === 'all' ? catalogData : catalogData.filter(i => i.cat === filter);
+  
+  // Filtrar por Categoría y Subcategoría
+  let items = catalogData;
+  if (currentCat !== 'all') {
+    items = items.filter(i => i.cat === currentCat);
+    if (currentSubcat !== 'all') {
+      items = items.filter(i => i.subcat === currentSubcat);
+    }
+  }
 
   if (!items.length) {
-    grid.innerHTML = `<p style="color:var(--text-muted);font-size:.85rem;grid-column:1/-1;text-align:center;padding:2rem">Sin equipos en esta categoría.</p>`;
+    grid.innerHTML = `<p style="color:var(--text-muted);font-size:.85rem;grid-column:1/-1;text-align:center;padding:2rem">Sin equipos en esta sección.</p>`;
     return;
   }
 
   grid.innerHTML = items.map(item => `
-    <div class="cat-card" data-cat="${item.cat}">
+    <div class="cat-card">
       <div class="cat-img">
         ${item.img
           ? `<img src="${IMG_BASE + item.img}" alt="${escHtml(item.name)}" loading="lazy"
@@ -202,21 +254,16 @@ function renderCatalog(filter) {
         }
       </div>
       <div class="cat-body">
-        <div class="cat-cat">${CAT_LABELS[item.cat] || item.cat}</div>
+        <div class="cat-cat">
+          ${escHtml(item.cat)} 
+          ${item.subcat ? `<span style="color:var(--gold); opacity: 0.6; margin: 0 4px;">|</span> ${escHtml(item.subcat)}` : ''}
+        </div>
         <div class="cat-name">${escHtml(item.name)}</div>
         <div class="cat-desc">${escHtml(item.desc) || '&nbsp;'}</div>
         <div class="cat-price">${escHtml(item.price)}</div>
         <div class="cat-price-lbl">por jornada · sin IVA</div>
       </div>
     </div>`).join('');
-}
-
-function rebuildFilters() {
-  const existing = new Set(catalogData.map(i => i.cat));
-  document.querySelectorAll('.filter-btn[data-cat]').forEach(btn => {
-    const cat = btn.dataset.cat;
-    btn.style.display = (cat === 'all' || existing.has(cat)) ? '' : 'none';
-  });
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -378,14 +425,6 @@ function showPage(id) {
   document.getElementById('nav-links').classList.remove('mob-open');
 }
 
-/* ── Filtros del catálogo ── */
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderCatalog(btn.dataset.cat);
-  });
-});
 
 /* ── Menú mobile ── */
 function toggleMenu() {

@@ -239,7 +239,17 @@ h1 .brand { color: var(--gold); font-style: italic; }
 
 /* ── CATÁLOGO ── */
 #page-catalogo { background: var(--dark2); }
-.cat-filters { display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center; margin-bottom: 2.75rem; }
+.cat-filters { display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center; margin-bottom: 1.25rem; }
+.subcat-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin-bottom: 2.75rem; }
+.subcat-btn {
+  font-family: var(--sans); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.35rem 0.9rem; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);
+  color: var(--text-muted); cursor: pointer; transition: all 0.18s;
+}
+.subcat-btn:hover { color: var(--text); border-color: rgba(201,168,76,0.3); background: rgba(201,168,76,0.05); }
+.subcat-btn.active { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); }
 .filter-btn {
   font-family: var(--sans); font-size: .7rem; font-weight: 500;
   letter-spacing: .1em; text-transform: uppercase;

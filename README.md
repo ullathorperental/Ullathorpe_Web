@@ -24,7 +24,9 @@ Landing page + catálogo de equipos para alquiler audiovisual. El sitio permite 
 ```
 ullathorpe-rental/
 │
-├── index.html           # Archivo principal del sitio
+├── index.html           # Archivo principal del sitio html
+├── app.js               # Archivo principal del sitio en js
+├── style.css            # Archivo principal del sitio en css
 ├── img/
 │   └── catalogo/        # Imágenes de los equipos
 │       ├── sony-a6600.jpg

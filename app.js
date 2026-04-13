@@ -95,6 +95,12 @@ function escHtml(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+/* Elimina decimales (,00 o .00) al final de los precios, preserva los centavos reales */
+function formatPrice(val) {
+  if (!val) return '';
+  return val.replace(/[,.]00$/, '').trim();
+}
+
 const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="width:28px;height:28px;opacity:.35">
   <rect x="3" y="3" width="18" height="18" rx="2"/>
   <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -109,44 +115,81 @@ function updateDateLabels() {
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   
   const text = `Actualizado a ${meses[d.getMonth()]} ${d.getFullYear()}`;
-  
   els.forEach(el => el.innerHTML = text);
 }
 
 
 /* ══════════════════════════════════════════════════════════
-   CATÁLOGO (DINÁMICO DESDE GOOGLE SHEETS)
+   CARGA PRINCIPAL (CATÁLOGO + COMBOS DINÁMICO DESDE GOOGLE SHEETS)
 ══════════════════════════════════════════════════════════ */
 let catalogData = [];
 let currentCat = 'all';
 let currentSubcat = 'all';
 
-async function loadCatalog() {
+async function loadData() {
   const grid = document.getElementById('cat-grid');
   grid.innerHTML = `<div class="sheet-loading" style="grid-column:1/-1">
     <div class="sheet-spinner"></div><span>Cargando catálogo...</span>
   </div>`;
 
   try {
-    const res = await fetch(SHEET_CATALOGO_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    
-    updateDateLabels(); // Fecha de hoy (sorteo de CORS)
+    const [resCat, resComb] = await Promise.all([
+      fetch(SHEET_CATALOGO_URL),
+      fetch(SHEET_COMBOS_URL)
+    ]);
 
-    const rows = parseCSV(await res.text());
-    if (!rows.length) throw new Error('El sheet está vacío.');
+    if (!resCat.ok) throw new Error(`Catálogo HTTP ${resCat.status}`);
+    if (!resComb.ok) throw new Error(`Combos HTTP ${resComb.status}`);
 
-    const km = buildKeyMap(rows[0]);
-    
-    // Mapeo dinámico directo del Sheet
-    catalogData = rows.map(row => ({
-      cat:    (row[km.categoria] || row[km.cat] || 'Otros').trim(),
-      subcat: (row[km.subcategoria] || row[km.subcat] || '').trim(),
-      name:   (row[km.nombre] || row[km.name] || '').trim(),
-      desc:   (row[km.descripcion] || row[km.description] || row[km.desc] || '').trim(),
-      price:  (row[km.precio] || row[km.price] || '').trim(),
-      img:    (row[km.imagen] || row[km.img] || row[km['ruta imagen']] || '').trim(),
+    updateDateLabels();
+
+    // Procesar Catálogo
+    const textCat = await resCat.text();
+    const rowsCat = parseCSV(textCat);
+    const kmCat = buildKeyMap(rowsCat[0] || {});
+
+    // Procesar Combos (Detección robusta de formato)
+    const textComb = await resComb.text();
+    const firstLineComb = textComb.split('\n')[0] || '';
+    const rowsComb = firstLineComb.includes('\t') ? parseTSV(textComb) : parseCSV(textComb);
+    const kmComb = buildKeyMap(rowsComb[0] || {});
+
+    // Mapear equipos estándar
+    const parsedCatalog = rowsCat.map(row => ({
+      isCombo: false,
+      cat:    (row[kmCat.categoria] || row[kmCat.cat] || 'Otros').trim(),
+      subcat: (row[kmCat.subcategoria] || row[kmCat.subcat] || '').trim(),
+      name:   (row[kmCat.nombre] || row[kmCat.name] || '').trim(),
+      desc:   (row[kmCat.descripcion] || row[kmCat.description] || row[kmCat.desc] || '').trim(),
+      price:  formatPrice((row[kmCat.precio] || row[kmCat.price] || '').trim()),
+      img:    (row[kmCat.imagen] || row[kmCat.img] || row[kmCat['ruta imagen']] || '').trim(),
     })).filter(r => r.name);
+
+    // Mapear Combos como equipos especiales dentro del catálogo
+    const parsedCombos = rowsComb.map(row => {
+      const imgStr = (row[kmComb.imagen] || row[kmComb.img] || row[kmComb['ruta imagen']] || '').trim();
+      const images = imgStr ? imgStr.split(';').map(i => i.trim()).filter(Boolean) : [];
+
+      return {
+        isCombo: true,
+        cat: (row[kmComb.categoria] || row[kmComb.cat] || 'Otros').trim(),
+        subcat: 'Combos', // El combo siempre es subcategoría de su rama principal
+        badge: (row[kmComb.badge] || row[kmComb.nivel] || '').trim(),
+        name: (row[kmComb.nombre] || row[kmComb.name] || row[kmComb.combo] || '').trim(),
+        items: [
+          (row[kmComb['item 1']] || row[kmComb['item 1']] || '').trim(),
+          (row[kmComb['item 2']] || row[kmComb['item 2']] || '').trim(),
+          (row[kmComb['item 3']] || row[kmComb['item 3']] || '').trim(),
+          (row[kmComb['item 4']] || row[kmComb['item 4']] || '').trim(),
+          (row[kmComb.items] || row[kmComb.contenido] || '').trim() // Fallback por si la estructura cambia
+        ].filter(Boolean),
+        price: formatPrice((row[kmComb.precio] || row[kmComb.price] || '').trim()),
+        images: images
+      };
+    }).filter(r => r.name);
+
+    // Unimos los dos mundos en la misma lista
+    catalogData = [...parsedCatalog, ...parsedCombos];
 
     buildMainFilters();
     renderCatalog();
@@ -166,7 +209,14 @@ function buildMainFilters() {
   const container = document.getElementById('main-filters');
   if (!container) return;
 
-  const categories = [...new Set(catalogData.map(item => item.cat))].filter(Boolean);
+  // Extraemos categorías normales (excluyendo "Combos")
+  const categories = [...new Set(catalogData.filter(i => !i.isCombo).map(item => item.cat))].filter(Boolean);
+  
+  // Agregamos Combos como categoría padre (si existe alguno cargado)
+  if (catalogData.some(i => i.isCombo)) {
+    categories.push('Combos');
+  }
+
   let html = `<button class="filter-btn ${currentCat === 'all' ? 'active' : ''}" data-cat="all">Todos</button>`;
   
   categories.forEach(c => {
@@ -197,8 +247,21 @@ function buildSubFilters() {
     return;
   }
 
-  // Buscar las subcategorías únicas de la categoría actual
-  const subcats = [...new Set(catalogData.filter(i => i.cat === currentCat).map(i => i.subcat))].filter(Boolean);
+  let subcats = [];
+
+  if (currentCat === 'Combos') {
+    // Si la categoría padre elegida es Combos, los subfiltros son las categorías origen (ej. Sonido, Video)
+    subcats = [...new Set(catalogData.filter(i => i.isCombo).map(i => i.cat))].filter(Boolean);
+  } else {
+    // Para categorías normales, los subfiltros son las subcategorías reales
+    subcats = [...new Set(catalogData.filter(i => i.cat === currentCat).map(i => i.subcat))].filter(Boolean);
+    
+    // Nos aseguramos que si hay Combos en esta categoría, el botón quede último en la lista
+    if (subcats.includes('Combos')) {
+      subcats = subcats.filter(sc => sc !== 'Combos');
+      subcats.push('Combos');
+    }
+  }
 
   if (subcats.length === 0) {
     container.style.display = 'none';
@@ -226,10 +289,20 @@ function buildSubFilters() {
 function renderCatalog() {
   const grid = document.getElementById('cat-grid');
   
-  // Filtrar por Categoría y Subcategoría
   let items = catalogData;
-  if (currentCat !== 'all') {
+
+  // Lógica de filtrado
+  if (currentCat === 'Combos') {
+    // Muestra solo los combos
+    items = items.filter(i => i.isCombo);
+    // Si se eligió una subcategoría (que en este caso es Video/Sonido), aplicamos filtro por 'cat' original
+    if (currentSubcat !== 'all') {
+      items = items.filter(i => i.cat === currentSubcat);
+    }
+  } else if (currentCat !== 'all') {
+    // Muestra equipos de la categoría elegida
     items = items.filter(i => i.cat === currentCat);
+    // Filtro por subcategoría estándar
     if (currentSubcat !== 'all') {
       items = items.filter(i => i.subcat === currentSubcat);
     }
@@ -240,121 +313,63 @@ function renderCatalog() {
     return;
   }
 
-  grid.innerHTML = items.map(item => `
-    <div class="cat-card">
-      <div class="cat-img">
-        ${item.img
-          ? `<img src="${IMG_BASE + item.img}" alt="${escHtml(item.name)}" loading="lazy"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-             <div class="cat-img-placeholder" style="display:none;">
-               ${PLACEHOLDER_SVG}
-               <span style="font-size:.58rem;opacity:.4;margin-top:.25rem">${escHtml(item.img)}</span>
-             </div>`
-          : `<div class="cat-img-placeholder">${PLACEHOLDER_SVG}<span style="font-size:.6rem;opacity:.35">sin imagen</span></div>`
-        }
-      </div>
-      <div class="cat-body">
-        <div class="cat-cat">
-          ${escHtml(item.cat)} 
-          ${item.subcat ? `<span style="color:var(--gold); opacity: 0.6; margin: 0 4px;">|</span> ${escHtml(item.subcat)}` : ''}
-        </div>
-        <div class="cat-name">${escHtml(item.name)}</div>
-        <div class="cat-desc">${escHtml(item.desc) || '&nbsp;'}</div>
-        <div class="cat-price">${escHtml(item.price)}</div>
-        <div class="cat-price-lbl">por jornada · sin IVA</div>
-      </div>
-    </div>`).join('');
-}
+  // Lógica de visualización híbrida
+  grid.innerHTML = items.map(item => {
+    if (item.isCombo) {
+      // ─── Diseño de Tarjeta de COMBO ───
+      const imagesHtml = item.images.map(img => `<img src="${IMG_BASE + img}" alt="${escHtml(item.name)}" onerror="this.style.display='none'" />`).join('');
+      const badgeHtml = item.badge ? `<span class="combo-badge">${escHtml(item.badge)}</span>` : '';
+      const listHtml = item.items.map(i => `<li>${escHtml(i)}</li>`).join('');
 
-/* ══════════════════════════════════════════════════════════
-   COMBOS
-   Columnas esperadas en el sheet (TSV):
-     tipo | nombre | items | precio | nivel
-   - tipo   → VIDEO o SONIDO
-   - items  → separados por "|"  (ej: "Cámara Sony|Lente Sony")
-   - nivel  → badge (ej: Newbie, Intermedio…) — opcional
-══════════════════════════════════════════════════════════ */
-async function loadCombos() {
-  const container = document.getElementById('combos-container');
-  const loadingEl = document.getElementById('combos-loading');
-  const errorEl   = document.getElementById('combos-error');
-
-  try {
-    const res = await fetch(SHEET_COMBOS_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const rows = parseTSV(await res.text());
-    if (!rows.length) throw new Error('El sheet de combos está vacío.');
-
-    const km = buildKeyMap(rows[0]);
-    const combos = rows.map(row => ({
-      tipo:   (row[km.tipo]    || row[km.type]      || row[km.categoria] || 'otro').trim(),
-      nombre: (row[km.nombre]  || row[km.name]      || row[km.combo]     || '').trim(),
-      items:  (row[km.items]   || row[km.contenido] || row[km.detalle]   || '').trim(),
-      precio: (row[km.precio]  || row[km.price]     || '').trim(),
-      nivel:  (row[km.nivel]   || row[km.badge]     || '').trim(),
-    })).filter(c => c.nombre);
-
-    // Agrupamos por tipo
-    const grupos = {};
-    combos.forEach(c => {
-      const key = c.tipo.toUpperCase();
-      if (!grupos[key]) grupos[key] = [];
-      grupos[key].push(c);
-    });
-
-    loadingEl.style.display = 'none';
-
-    // Orden: VIDEO primero, SONIDO segundo, resto al final
-    const ORDER = ['VIDEO', 'SONIDO'];
-    const keys = [
-      ...ORDER.filter(k => grupos[k]),
-      ...Object.keys(grupos).filter(k => !ORDER.includes(k)),
-    ];
-
-    keys.forEach((tipo, idx) => {
-      const secEl = document.createElement('div');
-      secEl.className = 'combos-section';
-      if (idx > 0) secEl.style.cssText = 'margin-top:4rem;padding-top:3.5rem;border-top:1px solid rgba(201,168,76,.1)';
-      const label = tipo.charAt(0) + tipo.slice(1).toLowerCase();
-      secEl.innerHTML = `
-        <div class="combos-section-title">
-          <span class="combos-section-badge">${escHtml(label)}</span>
-          Combos de ${escHtml(label)}
-        </div>
-        <div class="combos-grid">
-          ${grupos[tipo].map(renderComboCard).join('')}
+      return `
+        <div class="cat-card combo-style">
+          <div class="cat-img">
+            ${item.images.length > 0 
+              ? `<div class="combo-img-collage">${imagesHtml}</div>` 
+              : `<div class="cat-img-placeholder">${PLACEHOLDER_SVG}<span style="font-size:.6rem;opacity:.35">sin imagen</span></div>`}
+          </div>
+          <div class="cat-body">
+            <div class="cat-cat">
+              ${escHtml(item.cat)} 
+              <span style="color:var(--gold); opacity: 0.6; margin: 0 4px;">|</span> COMBO
+              ${badgeHtml}
+            </div>
+            <div class="cat-name">${escHtml(item.name)}</div>
+            ${listHtml ? `<ul class="combo-card-items">${listHtml}</ul>` : ''}
+            <div class="cat-price">${escHtml(item.price)}</div>
+            <div class="cat-price-lbl">por jornada · sin IVA</div>
+          </div>
         </div>`;
-      container.appendChild(secEl);
-    });
-
-  } catch (err) {
-    loadingEl.style.display = 'none';
-    errorEl.style.display = '';
-    errorEl.innerHTML = `<strong>No se pudieron cargar los combos.</strong>
-      Revisá que el Google Sheet esté publicado y sea de acceso público.<br/>
-      <small style="opacity:.6;margin-top:.4rem;display:block">Error: ${err.message}</small>`;
-    console.error('[Combos]', err);
-  }
+    } else {
+      // ─── Diseño de Tarjeta NORMAL ───
+      return `
+        <div class="cat-card">
+          <div class="cat-img">
+            ${item.img
+              ? `<img src="${IMG_BASE + item.img}" alt="${escHtml(item.name)}" loading="lazy"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                 <div class="cat-img-placeholder" style="display:none;">
+                   ${PLACEHOLDER_SVG}
+                   <span style="font-size:.58rem;opacity:.4;margin-top:.25rem">${escHtml(item.img)}</span>
+                 </div>`
+              : `<div class="cat-img-placeholder">${PLACEHOLDER_SVG}<span style="font-size:.6rem;opacity:.35">sin imagen</span></div>`
+            }
+          </div>
+          <div class="cat-body">
+            <div class="cat-cat">
+              ${escHtml(item.cat)} 
+              ${item.subcat ? `<span style="color:var(--gold); opacity: 0.6; margin: 0 4px;">|</span> ${escHtml(item.subcat)}` : ''}
+            </div>
+            <div class="cat-name">${escHtml(item.name)}</div>
+            <div class="cat-desc">${escHtml(item.desc) || '&nbsp;'}</div>
+            <div class="cat-price">${escHtml(item.price)}</div>
+            <div class="cat-price-lbl">por jornada · sin IVA</div>
+          </div>
+        </div>`;
+    }
+  }).join('');
 }
 
-function renderComboCard(c) {
-  const wsp = `https://wa.me/${WSP_NUMBER}?text=${encodeURIComponent(`Hola! Me interesa el ${c.nombre}. ¿Tenés disponibilidad?`)}`;
-  const badge = c.nivel || (c.tipo.charAt(0) + c.tipo.slice(1).toLowerCase());
-  const itemList = c.items
-    ? c.items.split('|').map(i => i.trim()).filter(Boolean)
-        .map(i => `<li>${escHtml(i)}</li>`).join('')
-    : '';
-  return `
-    <div class="combo-card">
-      <span class="combo-badge">${escHtml(badge)}</span>
-      <div class="combo-name">${escHtml(c.nombre)}</div>
-      ${itemList ? `<ul class="combo-items">${itemList}</ul>` : ''}
-      <div class="combo-footer">
-        <div class="combo-price">${escHtml(c.precio)}<small>por jornada · sin IVA</small></div>
-        <a class="combo-wsp" href="${wsp}" target="_blank" rel="noopener">Reservar</a>
-      </div>
-    </div>`;
-}
 
 /* ══════════════════════════════════════════════════════════
    CONTACT BLOCK
@@ -400,9 +415,9 @@ function buildContactBlock() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SPA ENGINE
+   SPA ENGINE Y NAVEGACIÓN
 ══════════════════════════════════════════════════════════ */
-const PAGES = ['home','catalogo','combos','estudio','como','contrato'];
+const PAGES = ['home','catalogo','estudio','como','contrato']; // Hemos retirado combos
 
 function showPage(id) {
   PAGES.forEach(p => {
@@ -425,6 +440,14 @@ function showPage(id) {
   document.getElementById('nav-links').classList.remove('mob-open');
 }
 
+// Función dedicada al botón "Combos" de los accesos rápidos
+function goToCombos() {
+  showPage('catalogo');
+  currentCat = 'Combos';
+  currentSubcat = 'all';
+  buildMainFilters();
+  renderCatalog();
+}
 
 /* ── Menú mobile ── */
 function toggleMenu() {
@@ -436,11 +459,11 @@ window.addEventListener('scroll', () => {
   document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 40);
 }, { passive: true });
 
+
 /* ══════════════════════════════════════════════════════════
    INIT — se ejecuta al cargar la página
 ══════════════════════════════════════════════════════════ */
-loadCatalog();
-loadCombos();
+loadData();
 
 // Inyectar contacto en Home (activo al cargar)
 const homeSlot = document.getElementById('contact-slot-home');

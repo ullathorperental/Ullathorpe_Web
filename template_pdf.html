@@ -7,11 +7,15 @@
 
         :root {
             --gold: #C9A84C;
-            --bordo-light: #9b2525; /* El rojo de tu web */
+            --bordo-light: #9b2525;
             --dark: #2a2a2a;
             --dark2: #363636;  
             --text: #e8e0d0;
             --text-muted: #b0b0b0;
+            
+            --f-cat-nombre: {{ f_cat_nombre }};
+            --f-cat-desc: {{ f_cat_desc }};
+            --f-combo-nombre: {{ f_combo_nombre }};
         }
 
         @page {
@@ -30,14 +34,17 @@
         .pdf-page {
             width: 210mm;
             height: 297mm;
-            padding: 1.2cm 1.5cm; 
+            padding: 0.9cm 1.2cm;
             box-sizing: border-box;
             background-color: var(--dark);
             page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
             position: relative;
         }
 
-        /* ════ CARÁTULA ════ */
+        /* ════ CARÁTULA Y CONTRAPORTADA ════ */
         .cover-content {
             display: flex;
             flex-direction: column;
@@ -47,10 +54,9 @@
             height: 100%;
         }
 
-        /* Contenedor cuadrado para que el halo sea un círculo perfecto y no se corte */
         .logo-halo {
-            width: 450px;
-            height: 450px;
+            width: 480px;
+            height: 480px;
             margin-bottom: 20px;
             background: radial-gradient(circle at center, rgba(232,224,208,0.35) 0%, transparent 65%);
             border-radius: 50%;
@@ -59,14 +65,11 @@
             justify-content: center;
         }
 
-        .logo-halo img {
-            width: 320px;
-            object-fit: contain;
-        }
+        .logo-halo img { width: 350px; object-fit: contain; }
 
         .cover-content h1 {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 5rem;
+            font-size: 5.5rem;
             text-transform: uppercase;
             letter-spacing: 6px;
             margin: 0;
@@ -74,144 +77,317 @@
 
         .cover-content .subtitle {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             color: var(--gold);
             font-style: italic;
             margin-top: 10px;
         }
 
-        /* Información de WhatsApp */
         .cover-content .wsp-info {
             margin-top: 50px;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             color: var(--text);
             background-color: var(--dark2);
-            padding: 12px 25px;
+            padding: 15px 30px;
             border-radius: 6px;
             border: 1px solid rgba(255,255,255,0.05);
             letter-spacing: 1px;
         }
 
-        .cover-content .wsp-info strong {
-            color: var(--gold);
-        }
+        .cover-content .wsp-info strong { color: var(--gold); }
 
         .cover-content .date {
             margin-top: 80px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             letter-spacing: 4px;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
+        /* ════ ÍNDICE ════ */
+        .toc-container {
+            margin: 40px auto;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .toc-section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            color: var(--gold);
+            border-bottom: 1px solid rgba(201,168,76,0.3);
+            padding-bottom: 5px;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px 30px;
+        }
+
+        .toc-link {
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toc-link::before {
+            content: "•";
+            color: var(--bordo-light);
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+
         /* ════ ENCABEZADO ════ */
         .header-mini {
             border-bottom: 1px solid var(--gold);
-            padding-bottom: 8px;
-            margin-bottom: 20px;
+            padding-bottom: 6px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             color: var(--text-muted);
             letter-spacing: 1px;
+        }
+
+        .category-header-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
         h2.categoria-titulo {
             font-family: 'Cormorant Garamond', serif;
             color: var(--gold);
-            font-size: 2.4rem;
+            font-size: 2.6rem;
             text-transform: uppercase;
-            margin-top: 0;
-            margin-bottom: 25px;
+            margin: 0; 
             letter-spacing: 2px;
         }
 
-        /* ════ ÍTEMS ════ */
+        /* Botón corregido sin doble recuadro */
+        .back-to-index {
+            color: var(--gold);
+            text-decoration: none !important;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-weight: 700;
+        }
+
+        /* ════ GRILLAS ════ */
+        .items-container-cat {
+            flex: 1; 
+            display: grid;
+            grid-template-rows: repeat(4, 1fr); 
+            gap: 15px;
+        }
+        
+        .items-container-combo {
+            flex: 1; 
+            display: grid;
+            grid-template-rows: repeat(2, 1fr); 
+            gap: 20px;
+        }
+
+        /* ════ ÍTEMS DE CATÁLOGO ════ */
         .item-row {
             display: flex;
-            align-items: center;
+            align-items: stretch; 
             background-color: var(--dark2);
-            margin-bottom: 15px;
-            padding: 20px;
             border-radius: 6px;
             border: 1px solid rgba(255,255,255,0.03);
+            overflow: hidden; 
+            height: 100%; 
         }
 
         .item-img {
-            width: 150px;
-            height: 150px;
-            margin-right: 30px;
+            width: 240px; 
             background: #1e1e1e;
-            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 5px; 
+            box-sizing: border-box;
         }
 
-        .item-img img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-        }
+        .item-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-        .item-info {
+        .item-content-wrap {
+            display: flex;
             flex: 1;
+            align-items: center;
+            padding: 15px 25px;
+            box-sizing: border-box;
+            overflow: hidden;
         }
+
+        .item-info { flex: 1; padding-right: 15px; }
 
         .item-subcat {
             font-family: 'Outfit', sans-serif;
-            font-size: 0.8rem;
-            color: var(--bordo-light); /* Aplicamos el rojo de la web */
+            font-size: 0.9rem;
+            color: var(--bordo-light);
             letter-spacing: 1.5px;
             text-transform: uppercase;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             display: block;
             font-weight: 700;
         }
 
         .item-nombre {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 1.8rem;
+            font-size: var(--f-cat-nombre);
             font-weight: 700;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             color: var(--text);
+            line-height: 1.1;
         }
 
         .item-desc {
-            font-size: 1rem;
+            font-size: var(--f-cat-desc);
             color: var(--text-muted);
-            line-height: 1.5;
+            line-height: 1.4;
+            margin: 0;
         }
 
         .item-precio {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
+            font-size: 3rem;
             color: var(--gold);
             font-weight: bold;
-            margin-left: 20px;
             white-space: nowrap;
         }
 
-        /* ════ COMBOS ════ */
+        /* ════ SECCIÓN COMBOS ════ */
         .combo-card {
+            display: flex;
+            flex-direction: column;
             background: var(--dark2);
-            border-left: 5px solid var(--gold);
-            padding: 30px;
-            margin-bottom: 25px;
+            border: 1px solid rgba(201,168,76,0.15);
+            border-top: 4px solid var(--gold);
+            padding: 25px;
+            border-radius: 6px;
+            height: 100%; 
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative; 
         }
+
+        .combo-top { 
+            display: block; 
+            margin-bottom: 10px;
+        }
+
+        .combo-price {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem; 
+            color: var(--gold);
+            font-weight: bold;
+            white-space: nowrap;
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .combo-info { width: 100%; }
+
+        .combo-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        .badge-newbie { background: #3b4252; color: #d8dee9; border: 1px solid #4c566a; }
+        .badge-intermedio { background: #5e81ac; color: #eceff4; border: 1px solid #81a1c1; }
+        .badge-avanzado { background: #b48ead; color: #eceff4; border: 1px solid #c6a0f6; }
+        .badge-pro { background: var(--gold); color: #000; box-shadow: 0 0 10px rgba(201,168,76,0.3); }
+        .badge-default { background: var(--bordo-light); color: var(--gold); }
 
         .combo-name {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 1.8rem;
+            font-size: var(--f-combo-nombre); 
+            font-weight: 700;
             margin-bottom: 10px;
             color: var(--text);
+            line-height: 1.1;
+            padding-right: 170px; 
         }
 
-        .combo-items {
-            color: var(--text-muted);
-            margin-bottom: 15px;
-            font-size: 1rem;
+        .combo-items-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%; 
         }
+
+        .combo-items-list li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 6px; 
+            font-size: 1.1rem; 
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .combo-items-list li::before {
+            content: "•";
+            color: var(--gold);
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-weight: bold;
+            font-size: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .combo-gallery {
+            display: flex;
+            gap: 15px;
+            height: 170px; 
+            margin-top: 15px; /* Margen fijo para evitar que se despegue mucho si hay poco texto */
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 15px;
+        }
+
+        .combo-gallery-img {
+            flex: 1; 
+            background: #1e1e1e;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px; 
+            border: 1px solid rgba(255,255,255,0.02);
+            overflow: hidden; 
+        }
+
+        .combo-gallery-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
     </style>
 </head>
 <body>
@@ -232,6 +408,28 @@
         </div>
     </div>
 
+    <div class="pdf-page" id="indice">
+        <div class="cover-content" style="justify-content: flex-start; padding-top: 50px;">
+            <h1 style="font-size: 4rem; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 40px;">Índice</h1>
+            
+            <div class="toc-container">
+                <div class="toc-section-title">Catálogo</div>
+                <ul class="toc-list">
+                    {% for item in toc_catalogo %}
+                        <li><a href="#{{ item.id }}" class="toc-link">{{ item.titulo }}</a></li>
+                    {% endfor %}
+                </ul>
+
+                <div class="toc-section-title">Kits</div>
+                <ul class="toc-list">
+                    {% for item in toc_combos %}
+                        <li><a href="#{{ item.id }}" class="toc-link">{{ item.titulo }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
     {% for pagina in paginas_catalogo %}
     <div class="pdf-page">
         <div class="header-mini">
@@ -239,56 +437,108 @@
             <span>JORNADA 23HS · SIN IVA</span>
         </div>
         
-        <h2 class="categoria-titulo">{{ pagina.categoria }}</h2>
-
-        {% for item in pagina['items'] %}
-        <div class="item-row">
-            <div class="item-img">
-                {% if item.Imagen %}
-                    <img src="img/catalogo/{{ item.Imagen }}">
-                {% endif %}
-            </div>
-            <div class="item-info">
-                {% if item.Subcat_Limpia %}
-                    <span class="item-subcat">{{ pagina.categoria }} | {{ item.Subcat_Limpia }}</span>
-                {% else %}
-                    <span class="item-subcat">{{ pagina.categoria }}</span>
-                {% endif %}
-                
-                <div class="item-nombre">{{ item.Nombre }}</div>
-                <div class="item-desc">{{ item.Descripción }}</div>
-            </div>
-            <div class="item-precio">${{ item.Precio | replace('$', '') | trim }}</div>
+        <div class="category-header-wrap">
+            <h2 class="categoria-titulo" {% if pagina.id %}id="{{ pagina.id }}"{% endif %}>
+                {{ pagina.categoria }}
+            </h2>
+            <a href="#indice" class="back-to-index">Volver al índice</a>
         </div>
-        {% endfor %}
+
+        <div class="items-container-cat">
+            {% for item in pagina['items'] %}
+            <div class="item-row">
+                <div class="item-img">
+                    {% if item.Imagen %}
+                        <img src="img/catalogo/{{ item.Imagen }}">
+                    {% endif %}
+                </div>
+                
+                <div class="item-content-wrap">
+                    <div class="item-info">
+                        {% if item.Subcat_Limpia %}
+                            <span class="item-subcat">{{ pagina.categoria }} | {{ item.Subcat_Limpia }}</span>
+                        {% else %}
+                            <span class="item-subcat">{{ pagina.categoria }}</span>
+                        {% endif %}
+                        
+                        <div class="item-nombre">{{ item.Nombre }}</div>
+                        <div class="item-desc">{{ item.Descripción }}</div>
+                    </div>
+                    <div class="item-precio">${{ item.PrecioLimpio }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     {% endfor %}
 
     {% for pagina in paginas_combos %}
     <div class="pdf-page">
         <div class="header-mini">
-            <span>KITS DE ALQUILER</span>
+            <span>KITS PROMOCIONALES</span>
             <span>JORNADA 23HS · SIN IVA</span>
         </div>
         
-        <h2 class="categoria-titulo">{{ pagina.categoria }}</h2>
-
-        {% for combo in pagina['items'] %}
-        <div class="combo-card">
-            <div class="combo-name">{{ combo.Nombre }}</div>
-            <div class="combo-items">
-                {{ combo['Ítem 1'] }} 
-                {% if combo['Ítem 2'] %} | {{ combo['Ítem 2'] }}{% endif %}
-                {% if combo['Ítem 3'] %} | {{ combo['Ítem 3'] }}{% endif %}
-                {% if combo['Ítem 4'] %} | {{ combo['Ítem 4'] }}{% endif %}
-            </div>
-            <div style="text-align: right; font-size: 2.5rem; color: var(--gold); font-family: 'Cormorant Garamond', serif; font-weight: bold;">
-                ${{ combo.Precio | replace('$', '') | trim }}
-            </div>
+        <div class="category-header-wrap">
+            <h2 class="categoria-titulo" {% if pagina.id %}id="{{ pagina.id }}"{% endif %}>
+                {{ pagina.categoria }}
+            </h2>
+            <a href="#indice" class="back-to-index">Volver al índice</a>
         </div>
-        {% endfor %}
+
+        <div class="items-container-combo">
+            {% for combo in pagina['items'] %}
+            <div class="combo-card">
+                
+                <div class="combo-top">
+                    <div class="combo-price">${{ combo.PrecioLimpio }}</div>
+                    <div class="combo-info">
+                        {% if combo.BadgeText %}
+                            <span class="combo-badge badge-{{ combo.BadgeClass }}">{{ combo.BadgeText }}</span>
+                        {% endif %}
+                        
+                        <div class="combo-name">{{ combo.Nombre }}</div>
+                        
+                        <ul class="combo-items-list">
+                            <li>{{ combo['Ítem 1'] }}</li>
+                            {% if combo['Ítem 2'] %}<li>{{ combo['Ítem 2'] }}</li>{% endif %}
+                            {% if combo['Ítem 3'] %}<li>{{ combo['Ítem 3'] }}</li>{% endif %}
+                            {% if combo['Ítem 4'] %}<li>{{ combo['Ítem 4'] }}</li>{% endif %}
+                        </ul>
+                    </div>
+                </div>
+                
+                {% if combo.ListaImagenes %}
+                <div class="combo-gallery">
+                    {% for img in combo.ListaImagenes %}
+                        <div class="combo-gallery-img">
+                            <img src="img/catalogo/{{ img }}">
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+        </div>
     </div>
     {% endfor %}
+
+    <div class="pdf-page">
+        <div class="cover-content" style="justify-content: center;">
+            <h1 style="font-family: 'Cormorant Garamond', serif; font-size: 3.5rem; color: var(--gold); text-transform: none; font-style: italic; letter-spacing: 1px; margin-bottom: 50px;">
+                "{{ texto_contraportada }}"
+            </h1>
+            <div class="logo-halo" style="width: 350px; height: 350px; margin-bottom: 40px; background: radial-gradient(circle at center, rgba(232,224,208,0.2) 0%, transparent 65%);">
+                <img src="img/logo.png" alt="Logo" style="width: 250px;">
+            </div>
+            <div class="subtitle" style="font-size: 2.5rem; margin-bottom: 30px;">Ullathorpe Rental</div>
+            <div class="wsp-info">
+                Pedidos y reservas vía WhatsApp: <strong>011-3030-1420</strong>
+            </div>
+            <div class="date">{{ fecha_actual }}</div>
+        </div>
+    </div>
 
 </body>
 </html>

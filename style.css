@@ -275,8 +275,11 @@ h1 .brand { color: var(--gold); font-style: italic; }
   background: var(--dark4); display: flex; align-items: center; justify-content: center;
   overflow: hidden; position: relative;
 }
-.cat-img img { width: 100%; height: 100%; object-fit: contain; transition: transform .35s; display: block; }
-.cat-card:hover .cat-img img { transform: scale(1.04); }
+/* Se achicó al 82% para darle "aire" (márgenes) a las fotos individuales */
+.cat-img img { 
+  width: 82%; height: 82%; object-fit: contain; transition: transform .35s; display: block; margin: auto; 
+}
+.cat-card:hover .cat-img img { transform: scale(1.06); }
 .cat-img-placeholder {
   display: flex; flex-direction: column; align-items: center; gap: .5rem;
   color: rgba(201,168,76,.2); font-size: .6rem; letter-spacing: .1em;
@@ -289,8 +292,10 @@ h1 .brand { color: var(--gold); font-style: italic; }
 .combo-img-collage { 
   width: 100%; height: 100%; display: grid; gap: 0.5rem; padding: 0.75rem; 
 }
+/* Al poner min-width y min-height en 0 forzamos a la imagen a no romper la grilla */
 .combo-img-collage img {
   width: 100%; height: 100%; object-fit: contain; transition: transform .35s; display: block;
+  max-width: 100%; max-height: 100%; min-width: 0; min-height: 0;
 }
 /* Layout para 2 imágenes */
 .combo-layout-2 {

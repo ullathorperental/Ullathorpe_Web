@@ -361,8 +361,10 @@ function renderCatalog() {
           </div>
           <div class="cat-body">
             <div class="cat-cat">
-              ${escHtml(item.cat)} 
-              ${item.subcat ? `<span style="color:var(--gold); opacity: 0.6; margin: 0 4px;">|</span> ${escHtml(item.subcat)}` : ''}
+              <span>
+                ${escHtml(item.cat)} 
+                ${item.subcat ? `<span style="color:var(--gold); opacity: 0.6; margin: 0 4px;">|</span> ${escHtml(item.subcat)}` : ''}
+              </span>
             </div>
             <div class="cat-name">${escHtml(item.name)}</div>
             <div class="cat-desc">${escHtml(item.desc) || '&nbsp;'}</div>

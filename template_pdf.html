@@ -13,6 +13,7 @@
             --text: #e8e0d0;
             --text-muted: #b0b0b0;
             
+            /* Recibimos las fuentes calculadas en Python */
             --f-cat-nombre: {{ f_cat_nombre }};
             --f-cat-desc: {{ f_cat_desc }};
             --f-combo-nombre: {{ f_combo_nombre }};
@@ -69,22 +70,24 @@
 
         .cover-content h1 {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 5.5rem;
+            font-size: 3.5rem;
             text-transform: uppercase;
-            letter-spacing: 6px;
+            letter-spacing: 5px;
             margin: 0;
         }
 
+        /* Esta es la clase que ahora tiene tu frase con el estilo dorado e itálico */
         .cover-content .subtitle {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 2.5rem;
+            font-size: 1.8rem; /* Tamaño ajustado para que la frase luzca elegante */
             color: var(--gold);
             font-style: italic;
-            margin-top: 10px;
+            margin-top: 15px;
+            letter-spacing: 1px;
         }
 
         .cover-content .wsp-info {
-            margin-top: 50px;
+            margin-top: 60px;
             font-size: 1.4rem;
             color: var(--text);
             background-color: var(--dark2);
@@ -97,7 +100,7 @@
         .cover-content .wsp-info strong { color: var(--gold); }
 
         .cover-content .date {
-            margin-top: 80px;
+            margin-top: 60px;
             font-size: 1.2rem;
             letter-spacing: 4px;
             color: var(--text-muted);
@@ -178,7 +181,6 @@
             letter-spacing: 2px;
         }
 
-        /* Botón corregido sin doble recuadro */
         .back-to-index {
             color: var(--gold);
             text-decoration: none !important;
@@ -186,7 +188,7 @@
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border: none !important;
+            border: none !important; 
             outline: none !important;
             box-shadow: none !important;
             border-radius: 4px;
@@ -370,7 +372,7 @@
             display: flex;
             gap: 15px;
             height: 170px; 
-            margin-top: 15px; /* Margen fijo para evitar que se despegue mucho si hay poco texto */
+            margin-top: 15px; 
             border-top: 1px solid rgba(255,255,255,0.05);
             padding-top: 15px;
         }
@@ -398,7 +400,7 @@
                 <img src="img/logo.png" alt="Logo">
             </div>
             <h1>Lista de Precios</h1>
-            <div class="subtitle">Ullathorpe Rental</div>
+            <div class="subtitle">Acompañando a los profesionales desde sus inicios</div>
             
             <div class="wsp-info">
                 Pedidos y reservas vía WhatsApp: <strong>011-3030-1420</strong>
@@ -532,8 +534,8 @@
             <div class="logo-halo" style="width: 350px; height: 350px; margin-bottom: 40px; background: radial-gradient(circle at center, rgba(232,224,208,0.2) 0%, transparent 65%);">
                 <img src="img/logo.png" alt="Logo" style="width: 250px;">
             </div>
-            <div class="subtitle" style="font-size: 2.5rem; margin-bottom: 30px;">Ullathorpe Rental</div>
-            <div class="wsp-info">
+            <div class="subtitle">Acompañando a los profesionales desde sus inicios</div>
+            <div class="wsp-info" style="margin-top: 30px;">
                 Pedidos y reservas vía WhatsApp: <strong>011-3030-1420</strong>
             </div>
             <div class="date">{{ fecha_actual }}</div>

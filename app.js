@@ -317,6 +317,11 @@ function renderCatalog() {
   grid.innerHTML = items.map(item => {
     if (item.isCombo) {
       // ─── Diseño de Tarjeta de COMBO ───
+      const imgCount = item.images.length;
+      let layoutClass = 'combo-layout-2'; // por defecto (2 o 1)
+      if (imgCount === 3) layoutClass = 'combo-layout-3';
+      if (imgCount >= 4) layoutClass = 'combo-layout-4';
+
       const imagesHtml = item.images.map(img => `<img src="${IMG_BASE + img}" alt="${escHtml(item.name)}" onerror="this.style.display='none'" />`).join('');
       const badgeHtml = item.badge ? `<span class="combo-badge">${escHtml(item.badge)}</span>` : '';
       const listHtml = item.items.map(i => `<li>${escHtml(i)}</li>`).join('');
@@ -324,14 +329,13 @@ function renderCatalog() {
       return `
         <div class="cat-card combo-style">
           <div class="cat-img">
-            ${item.images.length > 0 
-              ? `<div class="combo-img-collage">${imagesHtml}</div>` 
+            ${imgCount > 0 
+              ? `<div class="combo-img-collage ${layoutClass}">${imagesHtml}</div>` 
               : `<div class="cat-img-placeholder">${PLACEHOLDER_SVG}<span style="font-size:.6rem;opacity:.35">sin imagen</span></div>`}
           </div>
           <div class="cat-body">
             <div class="cat-cat">
-              ${escHtml(item.cat)} 
-              <span style="color:var(--gold); opacity: 0.6; margin: 0 4px;">|</span> COMBO
+              <span>${escHtml(item.cat)} <span style="color:var(--gold); opacity: 0.6; margin: 0 4px;">|</span> COMBO</span>
               ${badgeHtml}
             </div>
             <div class="cat-name">${escHtml(item.name)}</div>

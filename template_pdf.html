@@ -58,7 +58,7 @@
         .logo-halo {
             width: 480px;
             height: 480px;
-            margin-bottom: 20px;
+            margin-bottom: 10px; /* Reducido un poco para acercar el slogan */
             background: radial-gradient(circle at center, rgba(232,224,208,0.35) 0%, transparent 65%);
             border-radius: 50%;
             display: flex;
@@ -68,22 +68,17 @@
 
         .logo-halo img { width: 350px; object-fit: contain; }
 
-        .cover-content h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 3.5rem;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            margin: 0;
-        }
+        /* LISTA DE PRECIOS ELIMINADA */
 
-        /* Esta es la clase que ahora tiene tu frase con el estilo dorado e itálico */
+        /* Slogan agrandado y blindado en un solo renglón */
         .cover-content .subtitle {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 1.8rem; /* Tamaño ajustado para que la frase luzca elegante */
+            font-size: 2.2rem; /* Agrandado */
             color: var(--gold);
             font-style: italic;
-            margin-top: 15px;
+            margin-top: 10px; /* Acercado hacia arriba */
             letter-spacing: 1px;
+            white-space: nowrap; /* Nunca se rompe en dos renglones */
         }
 
         .cover-content .wsp-info {
@@ -153,7 +148,7 @@
             font-size: 1.5rem;
         }
 
-        /* ════ ENCABEZADO ════ */
+        /* ════ ENCABEZADO Y CONTENIDO ════ */
         .header-mini {
             border-bottom: 1px solid var(--gold);
             padding-bottom: 6px;
@@ -172,13 +167,17 @@
             margin-bottom: 20px;
         }
 
+        /* Título con prevención de quiebre (el tamaño se maneja dinámicamente) */
         h2.categoria-titulo {
             font-family: 'Cormorant Garamond', serif;
             color: var(--gold);
-            font-size: 2.6rem;
             text-transform: uppercase;
             margin: 0; 
             letter-spacing: 2px;
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis; 
+            padding-right: 15px; 
         }
 
         .back-to-index {
@@ -194,6 +193,8 @@
             border-radius: 4px;
             padding: 6px 12px;
             font-weight: 700;
+            white-space: nowrap; 
+            flex-shrink: 0; 
         }
 
         /* ════ GRILLAS ════ */
@@ -211,7 +212,7 @@
             gap: 20px;
         }
 
-        /* ════ ÍTEMS DE CATÁLOGO ════ */
+        /* ════ ÍTEMS DE CATÁLOGO (ARQUITECTURA ABSOLUTA) ════ */
         .item-row {
             display: flex;
             align-items: stretch; 
@@ -224,15 +225,26 @@
 
         .item-img {
             width: 240px; 
+            flex-shrink: 0;
             background: #1e1e1e;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 5px; 
+            padding: 18px; 
             box-sizing: border-box;
         }
 
-        .item-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .item-img-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .item-img-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
 
         .item-content-wrap {
             display: flex;
@@ -280,7 +292,7 @@
             white-space: nowrap;
         }
 
-        /* ════ SECCIÓN COMBOS ════ */
+        /* ════ SECCIÓN COMBOS (ARQUITECTURA ABSOLUTA) ════ */
         .combo-card {
             display: flex;
             flex-direction: column;
@@ -368,6 +380,7 @@
             line-height: 1.2;
         }
 
+        /* La galería impone la distribución equitativa de las cajas negras */
         .combo-gallery {
             display: flex;
             gap: 15px;
@@ -375,21 +388,34 @@
             margin-top: 15px; 
             border-top: 1px solid rgba(255,255,255,0.05);
             padding-top: 15px;
+            box-sizing: border-box;
         }
 
-        .combo-gallery-img {
-            flex: 1; 
+        /* La caja negra es estricta y matemática */
+        .combo-gallery-box {
+            flex: 1;
             background: #1e1e1e;
             border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 5px; 
+            padding: 12px;
             border: 1px solid rgba(255,255,255,0.02);
-            overflow: hidden; 
+            box-sizing: border-box;
         }
 
-        .combo-gallery-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        /* Contenedor fantasma que neutraliza el bug de WeasyPrint */
+        .combo-img-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .combo-img-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
@@ -399,14 +425,13 @@
             <div class="logo-halo">
                 <img src="img/logo.png" alt="Logo">
             </div>
-            <h1>Lista de Precios</h1>
             <div class="subtitle">Acompañando a los profesionales desde sus inicios</div>
             
             <div class="wsp-info">
                 Pedidos y reservas vía WhatsApp: <strong>011-3030-1420</strong>
             </div>
 
-            <div class="date">{{ fecha_actual }}</div>
+            <div class="date">CATÁLOGO DE EQUIPOS - {{ fecha_actual }}</div>
         </div>
     </div>
 
@@ -440,18 +465,21 @@
         </div>
         
         <div class="category-header-wrap">
-            <h2 class="categoria-titulo" {% if pagina.id %}id="{{ pagina.id }}"{% endif %}>
-                {{ pagina.categoria }}
+            <h2 class="categoria-titulo" 
+                {% if pagina.id %}id="{{ pagina.id }}"{% endif %}
+                style="font-size: {% if pagina.titulo_pagina|length > 32 %}1.4rem{% elif pagina.titulo_pagina|length > 22 %}1.8rem{% else %}2.3rem{% endif %};">
+                {{ pagina.titulo_pagina }}
             </h2>
-            <a href="#indice" class="back-to-index">Volver al índice</a>
-        </div>
+            </div>
 
         <div class="items-container-cat">
             {% for item in pagina['items'] %}
             <div class="item-row">
                 <div class="item-img">
                     {% if item.Imagen %}
-                        <img src="img/catalogo/{{ item.Imagen }}">
+                        <div class="item-img-container">
+                            <img src="img/catalogo/{{ item.Imagen }}">
+                        </div>
                     {% endif %}
                 </div>
                 
@@ -482,11 +510,12 @@
         </div>
         
         <div class="category-header-wrap">
-            <h2 class="categoria-titulo" {% if pagina.id %}id="{{ pagina.id }}"{% endif %}>
-                {{ pagina.categoria }}
+            <h2 class="categoria-titulo" 
+                {% if pagina.id %}id="{{ pagina.id }}"{% endif %}
+                style="font-size: {% if pagina.titulo_pagina|length > 32 %}1.4rem{% elif pagina.titulo_pagina|length > 22 %}1.8rem{% else %}2.3rem{% endif %};">
+                {{ pagina.titulo_pagina }}
             </h2>
-            <a href="#indice" class="back-to-index">Volver al índice</a>
-        </div>
+            </div>
 
         <div class="items-container-combo">
             {% for combo in pagina['items'] %}
@@ -513,8 +542,10 @@
                 {% if combo.ListaImagenes %}
                 <div class="combo-gallery">
                     {% for img in combo.ListaImagenes %}
-                        <div class="combo-gallery-img">
-                            <img src="img/catalogo/{{ img }}">
+                        <div class="combo-gallery-box">
+                            <div class="combo-img-container">
+                                <img src="img/catalogo/{{ img }}">
+                            </div>
                         </div>
                     {% endfor %}
                 </div>
@@ -538,7 +569,7 @@
             <div class="wsp-info" style="margin-top: 30px;">
                 Pedidos y reservas vía WhatsApp: <strong>011-3030-1420</strong>
             </div>
-            <div class="date">{{ fecha_actual }}</div>
+            <!-- <div class="date">CATÁLOGO DE EQUIPOS - {{ fecha_actual }}</div> -->
         </div>
     </div>
 

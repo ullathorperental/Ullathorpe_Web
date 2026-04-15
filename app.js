@@ -257,40 +257,35 @@ function renderCartUI() {
 
     let imgHtml = '';
     if (item.isCombo && item.images.length > 0) {
-      // Vista estática: Primer imagen con la insignia KIT
+      // Vista estática: Primera imagen
       const firstImg = `<img src="${IMG_BASE + item.images[0]}" class="combo-first-img">`;
       const imgCount = item.images.length;
       
+      let loopHtml = '';
       if (imgCount > 1) {
         // Animación Ping-Pong: Calcula el desplazamiento exacto hasta la última foto
-        const dur = imgCount * 1.2; // 1.2 segundos por foto
+        const dur = imgCount * 1.2; 
         const translatePct = -((imgCount - 1) / imgCount) * 100;
         const loopImgsHtml = item.images.map(img => `<img src="${IMG_BASE + img}">`).join('');
         
-        imgHtml = `
-          <div class="cart-combo-container">
-            <div class="cart-combo-static">
-              ${firstImg}
-              <div class="combo-kit-badge">KIT</div>
-            </div>
-            <div class="cart-combo-loop">
-              <div class="cart-combo-track" style="animation: comboPingPong ${dur}s ease-in-out infinite alternate; --slide-target: ${translatePct}%;">
-                ${loopImgsHtml}
-              </div>
-            </div>
-          </div>`;
-      } else {
-        // Fallback si el combo solo tuviera 1 foto en el sheet
-        imgHtml = `
-          <div class="cart-combo-container">
-            <div class="cart-combo-static">
-              ${firstImg}
-              <div class="combo-kit-badge">KIT</div>
+        loopHtml = `
+          <div class="cart-combo-loop">
+            <div class="cart-combo-track" style="animation: comboPingPong ${dur}s ease-in-out infinite alternate; --slide-target: ${translatePct}%;">
+              ${loopImgsHtml}
             </div>
           </div>`;
       }
+
+      // La insignia "KIT" ahora es hermana del static y del loop, por lo que no se oculta
+      imgHtml = `
+        <div class="cart-combo-container">
+          <div class="cart-combo-static">
+            ${firstImg}
+          </div>
+          <div class="combo-kit-badge">KIT</div>
+          ${loopHtml}
+        </div>`;
     } else {
-      // Vista de ítem simple
       const imgSrc = item.img ? IMG_BASE + item.img : '';
       imgHtml = imgSrc ? `<img src="${imgSrc}" />` : PLACEHOLDER_SVG;
     }

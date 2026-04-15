@@ -144,13 +144,18 @@ function toggleCart() {
 
 function clearCart() {
   if (cart.length === 0) return;
-  
-  // Agregamos una confirmación simple para evitar vaciados accidentales
-  if (confirm("¿Estás seguro de que querés vaciar todo el carrito?")) {
-    cart = [];
-    saveCart();
-    showToast("Carrito vaciado correctamente", "success");
-  }
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+function executeClearCart() {
+  cart = [];
+  saveCart();
+  closeConfirm();
+  showToast("Carrito vaciado", "success");
 }
 
 /* ── Notificaciones Toast ── */
@@ -247,17 +252,29 @@ function renderCartUI() {
   cart.forEach((item, idx) => {
     totalCount += item.qty;
     const itemPriceNum = parsePriceToInt(item.price);
-    const subtotal = itemPriceNum * item.qty * days; // Multiplicado por cantidad y jornadas
+    const subtotal = itemPriceNum * item.qty * days;
     totalPrice += subtotal;
 
-    const displayImg = item.isCombo && item.images && item.images.length > 0 ? item.images[0] : item.img;
-    const imgSrc = displayImg ? IMG_BASE + displayImg : '';
+    let imgHtml = '';
+    if (item.isCombo && item.images.length > 0) {
+      // Vista estática (miniaturas)
+      const staticImgs = item.images.slice(0, 4).map(img => `<img src="${IMG_BASE + img}">`).join('');
+      // Vista hover (loop animado)
+      const loopImgs = item.images.map((img, i) => `<img src="${IMG_BASE + img}" class="loop-img" style="animation-delay: ${i * 2}s">`).join('');
+      
+      imgHtml = `
+        <div class="cart-combo-container">
+          <div class="cart-combo-static">${staticImgs}</div>
+          <div class="cart-combo-loop">${loopImgs}</div>
+        </div>`;
+    } else {
+      const imgSrc = item.img ? IMG_BASE + item.img : '';
+      imgHtml = imgSrc ? `<img src="${imgSrc}" />` : PLACEHOLDER_SVG;
+    }
 
     html += `
     <div class="cart-item">
-      <div class="cart-item-img">
-         ${imgSrc ? `<img src="${imgSrc}" />` : `<svg width="20" height="20" opacity="0.3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`}
-      </div>
+      <div class="cart-item-img">${imgHtml}</div>
       <div class="cart-item-info">
         <div class="cart-item-name">${escHtml(item.name)}</div>
         <div class="cart-item-bottom">
@@ -265,8 +282,8 @@ function renderCartUI() {
             <button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button>
             <span class="qty-val">${item.qty}</span>
             <button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button>
-            <button class="cart-item-remove" onclick="updateQty(${idx}, -${item.qty})" title="Quitar item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+            <button class="cart-item-remove" onclick="updateQty(${idx}, -${item.qty})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
             </button>
           </div>
           <div class="cart-item-price">$${formatNumber(subtotal)}</div>
@@ -300,38 +317,30 @@ function initCartDefaults() {
 // Ejecutar una vez cargue el script
 initCartDefaults();
 
-// Envío a WhatsApp (Formato ultra-limpio)
 function checkout() {
   if (cart.length === 0) return showToast("El carrito está vacío.");
   
   const dateVal = document.getElementById('cart-date').value;
   const daysVal = parseInt(document.getElementById('cart-days').value) || 1;
-
-  // Transformar YYYY-MM-DD a DD/MM/YYYY
   const [y, m, d] = dateVal.split('-');
   const dateFormatted = d ? `${d}/${m}/${y}` : 'A confirmar';
 
-  // Armado del mensaje - Limpiamos cualquier caracter extraño
   let msg = "Hola Ullathorpe! Quiero reservar lo siguiente:\n\n";
   let totalPrice = 0;
   
   cart.forEach(item => {
     const pNum = parsePriceToInt(item.price);
-    // Calculamos subtotal: Unidades x Precio Unitario x Cantidad de Jornadas
     const subtotal = pNum * item.qty * daysVal;
     totalPrice += subtotal;
-    
-    // Formato pedido: - 1x Nombre _$XX.XXX_
-    // Usamos guión simple (-) y evitamos puntos extra al final de la línea
+    // Formato limpio: - 1x Nombre _$50.000_
     msg += `- ${item.qty}x ${item.name} _$${formatNumber(subtotal)}_\n`;
   });
   
   msg += `\n*Total: $${formatNumber(totalPrice)}*\n\n`;
-  msg += `📅 Fecha de retiro: ${dateFormatted}\n`;
+  msg += `📆 Fecha de retiro: ${dateFormatted}\n`;
   msg += `⏱️ Jornadas: ${daysVal}\n\n`;
-  msg += `Espero confirmación de disponibilidad.`;
+  msg += "Espero confirmación de disponibilidad.";
   
-  // Enviamos a la función openWsp que hace el encodeURIComponent
   openWsp(msg);
 }
 
@@ -541,7 +550,7 @@ function renderCatalog() {
             ${listHtml ? `<ul class="combo-card-items">${listHtml}</ul>` : ''}
             <div class="card-action-bar">
               <div>
-                <div class="cat-price">${escHtml(item.price)}</div>
+                <div class="cat-price">$${escHtml(item.price)}</div>
                 <div class="cat-price-lbl">por jornada · sin IVA</div>
               </div>
               <button class="btn-add-cart" onclick="addToCart('${escQuot(item.name)}')">Agregar</button>
@@ -573,7 +582,7 @@ function renderCatalog() {
             <div class="cat-desc">${escHtml(item.desc) || '&nbsp;'}</div>
             <div class="card-action-bar">
               <div>
-                <div class="cat-price">${escHtml(item.price)}</div>
+                <div class="cat-price">$${escHtml(item.price)}</div>
                 <div class="cat-price-lbl">por jornada · sin IVA</div>
               </div>
               <button class="btn-add-cart" onclick="addToCart('${escQuot(item.name)}')">Agregar</button>

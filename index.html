@@ -14,6 +14,17 @@
 </head>
 <body>
 
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h4>¿Vaciar carrito?</h4>
+    <p>Se eliminarán todos los equipos seleccionados.</p>
+    <div class="confirm-btns">
+      <button class="btn-secondary" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-primary" style="background:#ff4444; border-color:#ff4444; color:#fff;" onclick="executeClearCart()">Vaciar</button>
+    </div>
+  </div>
+</div>
+
 <nav id="main-nav">
   <button class="nav-logo" onclick="showPage('home')">
     <img src="img/logo_leon.png" alt="Ullathorpe" onerror="this.style.display='none'" />

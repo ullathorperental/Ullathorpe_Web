@@ -257,17 +257,30 @@ function renderCartUI() {
 
     let imgHtml = '';
     if (item.isCombo && item.images.length > 0) {
-      // Vista estática (miniaturas)
-      const staticImgs = item.images.slice(0, 4).map(img => `<img src="${IMG_BASE + img}">`).join('');
-      // Vista hover (loop animado)
-      const loopImgs = item.images.map((img, i) => `<img src="${IMG_BASE + img}" class="loop-img" style="animation-delay: ${i * 2}s">`).join('');
+      // Vista estática: Primer imagen con la insignia KIT
+      const firstImg = `<img src="${IMG_BASE + item.images[0]}" class="combo-first-img">`;
+      
+      // Vista hover: Carrusel continuo estilo "carrete de cinta"
+      // Cuadruplicamos el array de fotos para que el loop no tenga cortes negros
+      const loopImages = [...item.images, ...item.images, ...item.images, ...item.images]; 
+      // Calculamos la duración para que se mueva rápido pero fluido (1.2 segundos por foto)
+      const dur = item.images.length * 1.2; 
+      const loopImgsHtml = loopImages.map(img => `<img src="${IMG_BASE + img}">`).join('');
       
       imgHtml = `
         <div class="cart-combo-container">
-          <div class="cart-combo-static">${staticImgs}</div>
-          <div class="cart-combo-loop">${loopImgs}</div>
+          <div class="cart-combo-static">
+            ${firstImg}
+            <div class="combo-kit-badge">KIT</div>
+          </div>
+          <div class="cart-combo-loop">
+            <div class="cart-combo-track" style="animation-duration: ${dur}s;">
+              ${loopImgsHtml}
+            </div>
+          </div>
         </div>`;
     } else {
+      // Vista de ítem simple
       const imgSrc = item.img ? IMG_BASE + item.img : '';
       imgHtml = imgSrc ? `<img src="${imgSrc}" />` : PLACEHOLDER_SVG;
     }
@@ -282,7 +295,7 @@ function renderCartUI() {
             <button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button>
             <span class="qty-val">${item.qty}</span>
             <button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button>
-            <button class="cart-item-remove" onclick="updateQty(${idx}, -${item.qty})">
+            <button class="cart-item-remove" onclick="updateQty(${idx}, -${item.qty})" title="Quitar item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
             </button>
           </div>

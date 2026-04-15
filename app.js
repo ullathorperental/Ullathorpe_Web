@@ -5,15 +5,10 @@
    Para cambios de layout → index.html
 ═══════════════════════════════════════════════════════════ */
 
-/* ── CONFIGURACIÓN ────────────────────────────────────────
-   IMG_BASE: ruta a las fotos de los equipos.
-   Cada ítem del sheet debe tener en la columna "img" el
-   nombre de archivo exacto (ej: sony-a6600.jpg).
-
-   Para usar GitHub raw:
-   'https://raw.githubusercontent.com/ullathorperental/Ullathorpe_Web/main/img/catalogo/'
-─────────────────────────────────────────────────────────── */
+/* ── CONFIGURACIÓN ──────────────────────────────────────── */
 const IMG_BASE = 'img/catalogo/';
+const MAX_COMBO_STOCK = 1; // Limite de stock para combos
+const WSP_NUMBER = '5491130301420';
 
 /* URLs públicas de Google Sheets (Archivo → Publicar en la web) */
 const SHEET_CATALOGO_URL =
@@ -22,9 +17,7 @@ const SHEET_CATALOGO_URL =
 const SHEET_COMBOS_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrkO59tIJIoo4cWllZAv0DDmf0AhsMdo4Gl3xSD73zMQqF81K11yRihYrWJJN0T9vAwFk_LgWnYHLU/pub?gid=1902386512&single=true&output=tsv';
 
-/* ── WhatsApp ─────────────────────────────────────────── */
-const WSP_NUMBER = '5491130301420';
-
+/* ── WhatsApp Genérico ─────────────────────────────────────────── */
 function openWsp(msg) {
   const text = encodeURIComponent(msg || 'Hola! Quiero consultar por equipos disponibles.');
   window.open(`https://wa.me/${WSP_NUMBER}?text=${text}`, '_blank', 'noopener,noreferrer');
@@ -82,8 +75,6 @@ function parseCSVLine(line) {
 /* ══════════════════════════════════════════════════════════
    UTILIDADES COMPARTIDAS
 ══════════════════════════════════════════════════════════ */
-
-/* Crea mapa { clave_normalizada → clave_real } insensible a tildes/mayúsculas */
 function buildKeyMap(firstRow) {
   const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   const map = {};
@@ -95,10 +86,23 @@ function escHtml(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* Elimina decimales (,00 o .00) al final de los precios, preserva los centavos reales */
+function escQuot(s) {
+  return (s || '').replace(/'/g, "\\'");
+}
+
 function formatPrice(val) {
   if (!val) return '';
   return val.replace(/[,.]00$/, '').trim();
+}
+
+function parsePriceToInt(priceStr) {
+  if (!priceStr) return 0;
+  const digits = priceStr.replace(/[^0-9]/g, '');
+  return parseInt(digits, 10) || 0;
+}
+
+function formatNumber(num) {
+  return new Intl.NumberFormat('es-AR').format(num);
 }
 
 const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="width:28px;height:28px;opacity:.35">
@@ -107,20 +111,146 @@ const PLACEHOLDER_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentCol
   <path d="m21 15-5-5L5 21"/>
 </svg>`;
 
-/* ── Función para formatear e inyectar la fecha dinámica ── */
 function updateDateLabels() {
   const els = document.querySelectorAll('.last-update-label');
-  
-  const d = new Date(); // Toma la fecha de hoy
+  const d = new Date(); 
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  
   const text = `Actualizado a ${meses[d.getMonth()]} ${d.getFullYear()}`;
   els.forEach(el => el.innerHTML = text);
 }
 
 
 /* ══════════════════════════════════════════════════════════
-   CARGA PRINCIPAL (CATÁLOGO + COMBOS DINÁMICO DESDE GOOGLE SHEETS)
+   SISTEMA DE CARRITO DE COMPRAS
+══════════════════════════════════════════════════════════ */
+let cart = JSON.parse(localStorage.getItem('ullathorpe_cart')) || [];
+
+function saveCart() {
+  localStorage.setItem('ullathorpe_cart', JSON.stringify(cart));
+  renderCartUI();
+}
+
+function toggleCart() {
+  document.getElementById('cart-overlay').classList.toggle('open');
+  document.getElementById('cart-modal').classList.toggle('open');
+  renderCartUI();
+}
+
+function addToCart(name) {
+  const item = catalogData.find(i => i.name === name);
+  if (!item) return;
+
+  const existing = cart.find(i => i.name === name);
+  if (existing) {
+    if (existing.qty < item.stock) {
+      existing.qty++;
+    } else {
+      alert(`El stock máximo para este equipo es de ${item.stock} unidad(es).`);
+      return; // Detener sin abrir el modal si no hay stock
+    }
+  } else {
+    if (item.stock > 0) {
+      cart.push({ ...item, qty: 1 });
+    } else {
+      alert("Sin stock disponible para este equipo.");
+      return;
+    }
+  }
+  
+  saveCart();
+  
+  // Abrir el carrito automáticamente como feedback visual
+  const modal = document.getElementById('cart-modal');
+  if(!modal.classList.contains('open')) toggleCart();
+}
+
+function updateQty(index, delta) {
+  const item = cart[index];
+  const newQty = item.qty + delta;
+  
+  if (newQty <= 0) {
+    cart.splice(index, 1); // Quitar si llega a 0
+  } else if (newQty > item.stock) {
+    alert(`El stock máximo para este equipo es de ${item.stock} unidad(es).`);
+  } else {
+    item.qty = newQty;
+  }
+  saveCart();
+}
+
+function renderCartUI() {
+  const body = document.getElementById('cart-body');
+  const badge = document.getElementById('cart-badge');
+  const totalEl = document.getElementById('cart-total-price');
+
+  let totalCount = 0;
+  let totalPrice = 0;
+
+  if (cart.length === 0) {
+    body.innerHTML = '<div class="cart-empty">Tu carrito está vacío.<br>Agregá equipos desde el catálogo.</div>';
+    badge.innerText = '0';
+    totalEl.innerText = '$0';
+    badge.style.display = 'none';
+    return;
+  }
+
+  badge.style.display = 'flex';
+  let html = '';
+  
+  cart.forEach((item, idx) => {
+    totalCount += item.qty;
+    const itemPriceNum = parsePriceToInt(item.price);
+    totalPrice += itemPriceNum * item.qty;
+
+    // Foto para mostrar en el carrito (la primera si es combo, sino la normal)
+    const displayImg = item.isCombo && item.images && item.images.length > 0 ? item.images[0] : item.img;
+    const imgSrc = displayImg ? IMG_BASE + displayImg : '';
+
+    html += `
+    <div class="cart-item">
+      <div class="cart-item-img">
+         ${imgSrc ? `<img src="${imgSrc}" />` : `<svg width="20" height="20" opacity="0.3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`}
+      </div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${escHtml(item.name)}</div>
+        <div class="cart-item-price">${escHtml(item.price)}</div>
+        <div class="cart-item-controls">
+          <button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button>
+          <button class="cart-item-remove" onclick="updateQty(${idx}, -${item.qty})">Quitar</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  body.innerHTML = html;
+  badge.innerText = totalCount;
+  totalEl.innerText = `$${formatNumber(totalPrice)}`;
+}
+
+// Envío a WhatsApp
+function checkout() {
+  if (cart.length === 0) return alert("El carrito está vacío.");
+  
+  let msg = "Hola Ullathorpe! Quiero reservar lo siguiente:\n\n";
+  let totalPrice = 0;
+  
+  cart.forEach(item => {
+    const pNum = parsePriceToInt(item.price);
+    totalPrice += pNum * item.qty;
+    msg += `- ${item.qty}x ${item.name} (${item.price} c/u)\n`;
+  });
+  
+  msg += `\n*Total est.: $${formatNumber(totalPrice)}* (sin IVA)\n\nEspero confirmación de disponibilidad.`;
+  
+  // Enviamos por WhatsApp codificando los saltos de línea (\n)
+  openWsp(msg);
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   CARGA PRINCIPAL (CATÁLOGO + COMBOS + STOCK)
 ══════════════════════════════════════════════════════════ */
 let catalogData = [];
 let currentCat = 'all';
@@ -148,7 +278,7 @@ async function loadData() {
     const rowsCat = parseCSV(textCat);
     const kmCat = buildKeyMap(rowsCat[0] || {});
 
-    // Procesar Combos (Detección robusta de formato)
+    // Procesar Combos 
     const textComb = await resComb.text();
     const firstLineComb = textComb.split('\n')[0] || '';
     const rowsComb = firstLineComb.includes('\t') ? parseTSV(textComb) : parseCSV(textComb);
@@ -163,9 +293,10 @@ async function loadData() {
       desc:   (row[kmCat.descripcion] || row[kmCat.description] || row[kmCat.desc] || '').trim(),
       price:  formatPrice((row[kmCat.precio] || row[kmCat.price] || '').trim()),
       img:    (row[kmCat.imagen] || row[kmCat.img] || row[kmCat['ruta imagen']] || '').trim(),
+      stock:  parseInt((row[kmCat.stc] || row[kmCat.stock] || row[kmCat.cantidad] || '1').trim(), 10) || 1,
     })).filter(r => r.name);
 
-    // Mapear Combos como equipos especiales dentro del catálogo
+    // Mapear Combos
     const parsedCombos = rowsComb.map(row => {
       const imgStr = (row[kmComb.imagen] || row[kmComb.img] || row[kmComb['ruta imagen']] || '').trim();
       const images = imgStr ? imgStr.split(';').map(i => i.trim()).filter(Boolean) : [];
@@ -173,7 +304,7 @@ async function loadData() {
       return {
         isCombo: true,
         cat: (row[kmComb.categoria] || row[kmComb.cat] || 'Otros').trim(),
-        subcat: 'Combos', // El combo siempre es subcategoría de su rama principal
+        subcat: 'Combos',
         badge: (row[kmComb.badge] || row[kmComb.nivel] || '').trim(),
         name: (row[kmComb.nombre] || row[kmComb.name] || row[kmComb.combo] || '').trim(),
         items: [
@@ -181,10 +312,11 @@ async function loadData() {
           (row[kmComb['item 2']] || row[kmComb['item 2']] || '').trim(),
           (row[kmComb['item 3']] || row[kmComb['item 3']] || '').trim(),
           (row[kmComb['item 4']] || row[kmComb['item 4']] || '').trim(),
-          (row[kmComb.items] || row[kmComb.contenido] || '').trim() // Fallback por si la estructura cambia
+          (row[kmComb.items] || row[kmComb.contenido] || '').trim() 
         ].filter(Boolean),
         price: formatPrice((row[kmComb.precio] || row[kmComb.price] || '').trim()),
-        images: images
+        images: images,
+        stock: MAX_COMBO_STOCK
       };
     }).filter(r => r.name);
 
@@ -193,6 +325,7 @@ async function loadData() {
 
     buildMainFilters();
     renderCatalog();
+    renderCartUI(); // Inicializamos la burbuja del carrito si había datos guardados
 
   } catch (err) {
     grid.innerHTML = `<div class="sheet-error" style="grid-column:1/-1">
@@ -209,13 +342,8 @@ function buildMainFilters() {
   const container = document.getElementById('main-filters');
   if (!container) return;
 
-  // Extraemos categorías normales (excluyendo "Combos")
   const categories = [...new Set(catalogData.filter(i => !i.isCombo).map(item => item.cat))].filter(Boolean);
-  
-  // Agregamos Combos como categoría padre (si existe alguno cargado)
-  if (catalogData.some(i => i.isCombo)) {
-    categories.push('Combos');
-  }
+  if (catalogData.some(i => i.isCombo)) categories.push('Combos');
 
   let html = `<button class="filter-btn ${currentCat === 'all' ? 'active' : ''}" data-cat="all">Todos</button>`;
   
@@ -227,7 +355,7 @@ function buildMainFilters() {
   container.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       currentCat = e.target.dataset.cat;
-      currentSubcat = 'all'; // Resetea la subcategoría al cambiar la principal
+      currentSubcat = 'all'; 
       buildMainFilters();
       renderCatalog();
     });
@@ -241,7 +369,6 @@ function buildSubFilters() {
   const container = document.getElementById('subcat-filters');
   if (!container) return;
 
-  // Si está en "Todos" ocultamos los filtros secundarios
   if (currentCat === 'all') {
     container.style.display = 'none';
     return;
@@ -250,13 +377,9 @@ function buildSubFilters() {
   let subcats = [];
 
   if (currentCat === 'Combos') {
-    // Si la categoría padre elegida es Combos, los subfiltros son las categorías origen (ej. Sonido, Video)
     subcats = [...new Set(catalogData.filter(i => i.isCombo).map(i => i.cat))].filter(Boolean);
   } else {
-    // Para categorías normales, los subfiltros son las subcategorías reales
     subcats = [...new Set(catalogData.filter(i => i.cat === currentCat).map(i => i.subcat))].filter(Boolean);
-    
-    // Nos aseguramos que si hay Combos en esta categoría, el botón quede último en la lista
     if (subcats.includes('Combos')) {
       subcats = subcats.filter(sc => sc !== 'Combos');
       subcats.push('Combos');
@@ -291,21 +414,12 @@ function renderCatalog() {
   
   let items = catalogData;
 
-  // Lógica de filtrado
   if (currentCat === 'Combos') {
-    // Muestra solo los combos
     items = items.filter(i => i.isCombo);
-    // Si se eligió una subcategoría (que en este caso es Video/Sonido), aplicamos filtro por 'cat' original
-    if (currentSubcat !== 'all') {
-      items = items.filter(i => i.cat === currentSubcat);
-    }
+    if (currentSubcat !== 'all') items = items.filter(i => i.cat === currentSubcat);
   } else if (currentCat !== 'all') {
-    // Muestra equipos de la categoría elegida
     items = items.filter(i => i.cat === currentCat);
-    // Filtro por subcategoría estándar
-    if (currentSubcat !== 'all') {
-      items = items.filter(i => i.subcat === currentSubcat);
-    }
+    if (currentSubcat !== 'all') items = items.filter(i => i.subcat === currentSubcat);
   }
 
   if (!items.length) {
@@ -313,12 +427,10 @@ function renderCatalog() {
     return;
   }
 
-  // Lógica de visualización híbrida
   grid.innerHTML = items.map(item => {
     if (item.isCombo) {
-      // ─── Diseño de Tarjeta de COMBO ───
       const imgCount = item.images.length;
-      let layoutClass = 'combo-layout-2'; // por defecto (2 o 1)
+      let layoutClass = 'combo-layout-2'; 
       if (imgCount === 3) layoutClass = 'combo-layout-3';
       if (imgCount >= 4) layoutClass = 'combo-layout-4';
 
@@ -340,12 +452,16 @@ function renderCatalog() {
             </div>
             <div class="cat-name">${escHtml(item.name)}</div>
             ${listHtml ? `<ul class="combo-card-items">${listHtml}</ul>` : ''}
-            <div class="cat-price">${escHtml(item.price)}</div>
-            <div class="cat-price-lbl">por jornada · sin IVA</div>
+            <div class="card-action-bar">
+              <div>
+                <div class="cat-price">${escHtml(item.price)}</div>
+                <div class="cat-price-lbl">por jornada · sin IVA</div>
+              </div>
+              <button class="btn-add-cart" onclick="addToCart('${escQuot(item.name)}')">Agregar</button>
+            </div>
           </div>
         </div>`;
     } else {
-      // ─── Diseño de Tarjeta NORMAL ───
       return `
         <div class="cat-card">
           <div class="cat-img">
@@ -368,8 +484,13 @@ function renderCatalog() {
             </div>
             <div class="cat-name">${escHtml(item.name)}</div>
             <div class="cat-desc">${escHtml(item.desc) || '&nbsp;'}</div>
-            <div class="cat-price">${escHtml(item.price)}</div>
-            <div class="cat-price-lbl">por jornada · sin IVA</div>
+            <div class="card-action-bar">
+              <div>
+                <div class="cat-price">${escHtml(item.price)}</div>
+                <div class="cat-price-lbl">por jornada · sin IVA</div>
+              </div>
+              <button class="btn-add-cart" onclick="addToCart('${escQuot(item.name)}')">Agregar</button>
+            </div>
           </div>
         </div>`;
     }
@@ -379,7 +500,6 @@ function renderCatalog() {
 
 /* ══════════════════════════════════════════════════════════
    CONTACT BLOCK
-   Se inyecta dinámicamente al pie de cada página.
 ══════════════════════════════════════════════════════════ */
 function buildContactBlock() {
   return `
@@ -423,7 +543,7 @@ function buildContactBlock() {
 /* ══════════════════════════════════════════════════════════
    SPA ENGINE Y NAVEGACIÓN
 ══════════════════════════════════════════════════════════ */
-const PAGES = ['home','catalogo','estudio','como','contrato']; // Hemos retirado combos
+const PAGES = ['home','catalogo','estudio','como','contrato']; 
 
 function showPage(id) {
   PAGES.forEach(p => {
@@ -436,7 +556,6 @@ function showPage(id) {
   if (navEl) navEl.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'instant' });
 
-  // Inyectar contacto si todavía no fue inyectado en esta página
   const slot = document.getElementById('contact-slot-' + id);
   if (slot && !slot.dataset.filled) {
     slot.innerHTML = buildContactBlock();
@@ -446,7 +565,6 @@ function showPage(id) {
   document.getElementById('nav-links').classList.remove('mob-open');
 }
 
-// Función dedicada al botón "Combos" de los accesos rápidos
 function goToCombos() {
   showPage('catalogo');
   currentCat = 'Combos';
@@ -455,23 +573,19 @@ function goToCombos() {
   renderCatalog();
 }
 
-/* ── Menú mobile ── */
 function toggleMenu() {
   document.getElementById('nav-links').classList.toggle('mob-open');
 }
 
-/* ── Efecto de scroll en el nav ── */
 window.addEventListener('scroll', () => {
   document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 40);
 }, { passive: true });
 
-
 /* ══════════════════════════════════════════════════════════
-   INIT — se ejecuta al cargar la página
+   INIT
 ══════════════════════════════════════════════════════════ */
 loadData();
 
-// Inyectar contacto en Home (activo al cargar)
 const homeSlot = document.getElementById('contact-slot-home');
 homeSlot.innerHTML = buildContactBlock();
 homeSlot.dataset.filled = '1';

@@ -34,6 +34,8 @@ body {
   min-height: 100vh;
 }
 
+body.no-scroll { overflow: hidden; }
+
 /* noise overlay */
 body::after {
   content: '';
@@ -493,9 +495,12 @@ h1 .brand { color: var(--gold); font-style: italic; }
 .cart-item-name { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; color: var(--text); line-height: 1.15; }
 .cart-item-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
 .cart-item-controls { display: flex; align-items: center; gap: 0.4rem; }
+
+/* Botones de cantidad y tacho de basura */
 .qty-btn { background: var(--dark4); border: 1px solid rgba(255,255,255,0.1); color: var(--text); width: 26px; height: 26px; border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: background 0.2s; }
 .qty-btn:hover { background: var(--gold); color: var(--dark); border-color: var(--gold); }
-.qty-val { font-size: 0.85rem; width: 20px; text-align: center; font-weight: 600; }
+/* Cantidad en color bordó brillante para buen contraste */
+.qty-val { font-size: 0.95rem; width: 22px; text-align: center; font-weight: 800; color: #e55353; }
 .cart-item-remove { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); cursor: pointer; width: 26px; height: 26px; border-radius: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-left: 0.2rem;}
 .cart-item-remove:hover { background: #ff4444; color: #fff; border-color: #ff4444; }
 .cart-item-remove svg { width: 14px; height: 14px; }
@@ -503,13 +508,13 @@ h1 .brand { color: var(--gold); font-style: italic; }
 
 .cart-footer { padding: 1.5rem; border-top: 1px solid rgba(201,168,76,0.1); background: var(--dark3); }
 .cart-rental-opts { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
-.opt-group { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; }
-.opt-group label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
-.opt-group input { background: var(--dark4); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 0.6rem; border-radius: 2px; font-family: var(--sans); outline: none; }
+.opt-group { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; width: 100%; }
+.opt-group label { font-size: 0.75rem; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; width: 100%; display: block; }
+.opt-group input { background: var(--dark4); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 0.6rem; border-radius: 2px; font-family: var(--sans); font-size: 1rem; outline: none; width: 100%; }
 .opt-group input:focus { border-color: var(--gold); }
 .opt-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 .cart-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
-.cart-total span { color: var(--text-muted); font-size: 0.9rem; }
+.cart-total span { color: var(--text); font-size: 1.3rem; font-weight: 600; }
 .cart-total strong { font-family: var(--serif); color: var(--gold); font-size: 1.75rem; }
 
 /* ── TOAST NOTIFICATIONS ── */

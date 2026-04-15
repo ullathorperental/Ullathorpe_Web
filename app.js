@@ -133,6 +133,7 @@ function saveCart() {
 function toggleCart() {
   document.getElementById('cart-overlay').classList.toggle('open');
   document.getElementById('cart-modal').classList.toggle('open');
+  document.body.classList.toggle('no-scroll'); // Bloquea/desbloquea el scroll del fondo
   renderCartUI();
 }
 
@@ -201,6 +202,17 @@ function renderCartUI() {
   const body = document.getElementById('cart-body');
   const badge = document.getElementById('cart-badge');
   const totalEl = document.getElementById('cart-total-price');
+  
+  // Obtenemos los días actuales para la multiplicación
+  const daysInput = document.getElementById('cart-days');
+  const days = daysInput ? (parseInt(daysInput.value) || 1) : 1;
+  
+  // Actualizamos el texto del label dinámicamente
+  const daysLabel = document.getElementById('cart-days-label');
+  if (daysLabel) {
+    const hours = (days * 24) - 1;
+    daysLabel.innerText = `Jornadas (${hours}hs)`;
+  }
 
   let totalCount = 0;
   let totalPrice = 0;
@@ -219,7 +231,7 @@ function renderCartUI() {
   cart.forEach((item, idx) => {
     totalCount += item.qty;
     const itemPriceNum = parsePriceToInt(item.price);
-    const subtotal = itemPriceNum * item.qty;
+    const subtotal = itemPriceNum * item.qty * days; // Multiplicado por cantidad y jornadas
     totalPrice += subtotal;
 
     const displayImg = item.isCombo && item.images && item.images.length > 0 ? item.images[0] : item.img;
@@ -238,7 +250,7 @@ function renderCartUI() {
             <span class="qty-val">${item.qty}</span>
             <button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button>
             <button class="cart-item-remove" onclick="updateQty(${idx}, -${item.qty})" title="Quitar item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
             </button>
           </div>
           <div class="cart-item-price">$${formatNumber(subtotal)}</div>
@@ -252,7 +264,6 @@ function renderCartUI() {
   totalEl.innerText = `$${formatNumber(totalPrice)}`;
 }
 
-// Setear fecha por defecto a mañana
 function initCartDefaults() {
   const dateInput = document.getElementById('cart-date');
   if (dateInput) {
@@ -263,16 +274,22 @@ function initCartDefaults() {
     const dd = String(tomorrow.getDate()).padStart(2, '0');
     dateInput.value = `${yyyy}-${mm}-${dd}`;
   }
+  
+  // Escuchar cambios en la cantidad de jornadas
+  const daysInput = document.getElementById('cart-days');
+  if (daysInput) {
+    daysInput.addEventListener('input', renderCartUI);
+  }
 }
 // Ejecutar una vez cargue el script
 initCartDefaults();
 
-// Envío a WhatsApp (Formato recalculado y limpio)
+// Envío a WhatsApp (Formato actualizado)
 function checkout() {
   if (cart.length === 0) return showToast("El carrito está vacío.");
   
   const dateVal = document.getElementById('cart-date').value;
-  const daysVal = document.getElementById('cart-days').value || 1;
+  const daysVal = parseInt(document.getElementById('cart-days').value) || 1;
 
   // Transformar YYYY-MM-DD a DD/MM/YYYY
   const [y, m, d] = dateVal.split('-');
@@ -283,16 +300,16 @@ function checkout() {
   
   cart.forEach(item => {
     const pNum = parsePriceToInt(item.price);
-    const subtotal = pNum * item.qty;
+    const subtotal = pNum * item.qty * daysVal;
     totalPrice += subtotal;
     
-    // Formato: - 1x Item Nombre $X.XXX
-    msg += `- ${item.qty}x ${item.name} $${formatNumber(subtotal)}\n`;
+    // Formato: - 1x Nombre _$X.XXX_
+    msg += `- ${item.qty}x ${item.name} _$${formatNumber(subtotal)}_\n`;
   });
   
   msg += `\n*Total: $${formatNumber(totalPrice)}*\n\n`;
-  msg += `📅 Fecha de retiro: ${dateFormatted}\n`;
-  msg += `⏳ Jornadas: ${daysVal}\n\n`;
+  msg += `📆 Fecha de retiro: ${dateFormatted}\n`;
+  msg += `⏱️ Jornadas: ${daysVal}\n\n`;
   msg += `Espero confirmación de disponibilidad.`;
   
   openWsp(msg);

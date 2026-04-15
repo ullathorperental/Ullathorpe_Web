@@ -259,26 +259,36 @@ function renderCartUI() {
     if (item.isCombo && item.images.length > 0) {
       // Vista estática: Primer imagen con la insignia KIT
       const firstImg = `<img src="${IMG_BASE + item.images[0]}" class="combo-first-img">`;
+      const imgCount = item.images.length;
       
-      // Vista hover: Carrusel continuo estilo "carrete de cinta"
-      // Cuadruplicamos el array de fotos para que el loop no tenga cortes negros
-      const loopImages = [...item.images, ...item.images, ...item.images, ...item.images]; 
-      // Calculamos la duración para que se mueva rápido pero fluido (1.2 segundos por foto)
-      const dur = item.images.length * 1.2; 
-      const loopImgsHtml = loopImages.map(img => `<img src="${IMG_BASE + img}">`).join('');
-      
-      imgHtml = `
-        <div class="cart-combo-container">
-          <div class="cart-combo-static">
-            ${firstImg}
-            <div class="combo-kit-badge">KIT</div>
-          </div>
-          <div class="cart-combo-loop">
-            <div class="cart-combo-track" style="animation-duration: ${dur}s;">
-              ${loopImgsHtml}
+      if (imgCount > 1) {
+        // Animación Ping-Pong: Calcula el desplazamiento exacto hasta la última foto
+        const dur = imgCount * 1.2; // 1.2 segundos por foto
+        const translatePct = -((imgCount - 1) / imgCount) * 100;
+        const loopImgsHtml = item.images.map(img => `<img src="${IMG_BASE + img}">`).join('');
+        
+        imgHtml = `
+          <div class="cart-combo-container">
+            <div class="cart-combo-static">
+              ${firstImg}
+              <div class="combo-kit-badge">KIT</div>
             </div>
-          </div>
-        </div>`;
+            <div class="cart-combo-loop">
+              <div class="cart-combo-track" style="animation: comboPingPong ${dur}s ease-in-out infinite alternate; --slide-target: ${translatePct}%;">
+                ${loopImgsHtml}
+              </div>
+            </div>
+          </div>`;
+      } else {
+        // Fallback si el combo solo tuviera 1 foto en el sheet
+        imgHtml = `
+          <div class="cart-combo-container">
+            <div class="cart-combo-static">
+              ${firstImg}
+              <div class="combo-kit-badge">KIT</div>
+            </div>
+          </div>`;
+      }
     } else {
       // Vista de ítem simple
       const imgSrc = item.img ? IMG_BASE + item.img : '';

@@ -19,8 +19,10 @@ const SHEET_COMBOS_URL =
 
 /* ── WhatsApp Genérico ─────────────────────────────────────────── */
 function openWsp(msg) {
-  const text = encodeURIComponent(msg || 'Hola! Quiero consultar por equipos disponibles.');
-  window.open(`https://wa.me/${WSP_NUMBER}?text=${text}`, '_blank', 'noopener,noreferrer');
+  // Filtramos el mensaje para asegurar que sea texto plano antes de codificar
+  const cleanMsg = msg.trim();
+  const encodedMsg = encodeURIComponent(cleanMsg);
+  window.open(`https://wa.me/${WSP_NUMBER}?text=${encodedMsg}`, '_blank', 'noopener,noreferrer');
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -92,7 +94,8 @@ function escQuot(s) {
 
 function formatPrice(val) {
   if (!val) return '';
-  return val.replace(/[,.]00$/, '').trim();
+  // Quitamos el ",00" del final y cualquier espacio extra
+  return val.split(',')[0].replace(/[^0-9.]/g, '').trim();
 }
 
 function parsePriceToInt(priceStr) {
@@ -102,6 +105,8 @@ function parsePriceToInt(priceStr) {
 }
 
 function formatNumber(num) {
+  // es-AR usa el punto (.) para miles. 
+  // .format() sin opciones no agrega decimales si el número es entero.
   return new Intl.NumberFormat('es-AR').format(num);
 }
 
@@ -135,6 +140,17 @@ function toggleCart() {
   document.getElementById('cart-modal').classList.toggle('open');
   document.body.classList.toggle('no-scroll'); // Bloquea/desbloquea el scroll del fondo
   renderCartUI();
+}
+
+function clearCart() {
+  if (cart.length === 0) return;
+  
+  // Agregamos una confirmación simple para evitar vaciados accidentales
+  if (confirm("¿Estás seguro de que querés vaciar todo el carrito?")) {
+    cart = [];
+    saveCart();
+    showToast("Carrito vaciado correctamente", "success");
+  }
 }
 
 /* ── Notificaciones Toast ── */
@@ -284,7 +300,7 @@ function initCartDefaults() {
 // Ejecutar una vez cargue el script
 initCartDefaults();
 
-// Envío a WhatsApp (Formato actualizado)
+// Envío a WhatsApp (Formato ultra-limpio)
 function checkout() {
   if (cart.length === 0) return showToast("El carrito está vacío.");
   
@@ -295,23 +311,27 @@ function checkout() {
   const [y, m, d] = dateVal.split('-');
   const dateFormatted = d ? `${d}/${m}/${y}` : 'A confirmar';
 
+  // Armado del mensaje - Limpiamos cualquier caracter extraño
   let msg = "Hola Ullathorpe! Quiero reservar lo siguiente:\n\n";
   let totalPrice = 0;
   
   cart.forEach(item => {
     const pNum = parsePriceToInt(item.price);
+    // Calculamos subtotal: Unidades x Precio Unitario x Cantidad de Jornadas
     const subtotal = pNum * item.qty * daysVal;
     totalPrice += subtotal;
     
-    // Formato: - 1x Nombre _$X.XXX_
+    // Formato pedido: - 1x Nombre _$XX.XXX_
+    // Usamos guión simple (-) y evitamos puntos extra al final de la línea
     msg += `- ${item.qty}x ${item.name} _$${formatNumber(subtotal)}_\n`;
   });
   
   msg += `\n*Total: $${formatNumber(totalPrice)}*\n\n`;
-  msg += `📆 Fecha de retiro: ${dateFormatted}\n`;
+  msg += `📅 Fecha de retiro: ${dateFormatted}\n`;
   msg += `⏱️ Jornadas: ${daysVal}\n\n`;
   msg += `Espero confirmación de disponibilidad.`;
   
+  // Enviamos a la función openWsp que hace el encodeURIComponent
   openWsp(msg);
 }
 

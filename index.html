@@ -301,9 +301,14 @@
 <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
 <div class="cart-modal" id="cart-modal">
   <div class="cart-header">
-    <h3>Mi Carrito</h3>
+  <h3>Mi Carrito</h3>
+  <div style="display:flex; align-items:center; gap: 1.2rem;">
+    <button class="cart-clear-all" onclick="clearCart()" title="Vaciar todo el carrito">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+    </button>
     <button class="cart-close" onclick="toggleCart()">✕</button>
   </div>
+</div>
   <div class="cart-body" id="cart-body">
     </div>
   <div class="cart-footer">

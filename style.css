@@ -517,6 +517,19 @@ h1 .brand { color: var(--gold); font-style: italic; }
 .cart-total span { color: var(--text); font-size: 1.3rem; font-weight: 600; }
 .cart-total strong { font-family: var(--serif); color: var(--gold); font-size: 1.75rem; }
 
+.cart-clear-all {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  transition: all 0.2s;
+}
+.cart-clear-all svg { width: 20px; height: 20px; }
+.cart-clear-all:hover { color: #ff4444; transform: scale(1.1); }
+
 /* ── TOAST NOTIFICATIONS ── */
 #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
 .toast { background: #d9822b; color: #1a1a1a; font-family: var(--sans); font-size: 0.85rem; font-weight: 600; padding: 0.8rem 1.25rem; border-radius: 4px; box-shadow: 0 5px 20px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 0.6rem; animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }

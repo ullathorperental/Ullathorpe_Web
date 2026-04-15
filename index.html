@@ -307,8 +307,18 @@
   <div class="cart-body" id="cart-body">
     </div>
   <div class="cart-footer">
+    <div class="cart-rental-opts">
+      <div class="opt-group">
+        <label for="cart-date">Fecha de retiro</label>
+        <input type="date" id="cart-date" />
+      </div>
+      <div class="opt-group">
+        <label for="cart-days">Jornadas (23hs)</label>
+        <input type="number" id="cart-days" value="1" min="1" />
+      </div>
+    </div>
     <div class="cart-total">
-      <span>Total est. (sin IVA):</span>
+      <span>Total:</span>
       <strong id="cart-total-price">$0</strong>
     </div>
     <button class="btn-primary" style="width:100%; justify-content:center; padding: 1rem;" onclick="checkout()">
@@ -318,5 +328,6 @@
 </div>
 
 <script src="app.js"></script>
+<div id="toast-container"></div>
 </body>
 </html>

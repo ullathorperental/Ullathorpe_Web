@@ -136,6 +136,26 @@ function toggleCart() {
   renderCartUI();
 }
 
+/* ── Notificaciones Toast ── */
+function showToast(msg, type = 'warning') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const icon = type === 'warning' 
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    
+  toast.innerHTML = `${icon} <span>${msg}</span>`;
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('hide');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
 function addToCart(name) {
   const item = catalogData.find(i => i.name === name);
   if (!item) return;
@@ -144,24 +164,23 @@ function addToCart(name) {
   if (existing) {
     if (existing.qty < item.stock) {
       existing.qty++;
+      showToast(`Añadiste otro "${item.name}" al carrito`, 'success');
     } else {
-      alert(`El stock máximo para este equipo es de ${item.stock} unidad(es).`);
-      return; // Detener sin abrir el modal si no hay stock
+      showToast(`Stock máximo alcanzado (${item.stock}) para este equipo.`);
+      return; 
     }
   } else {
     if (item.stock > 0) {
       cart.push({ ...item, qty: 1 });
+      showToast(`"${item.name}" añadido al carrito`, 'success');
     } else {
-      alert("Sin stock disponible para este equipo.");
+      showToast("Sin stock disponible para este equipo.");
       return;
     }
   }
   
   saveCart();
-  
-  // Abrir el carrito automáticamente como feedback visual
-  const modal = document.getElementById('cart-modal');
-  if(!modal.classList.contains('open')) toggleCart();
+  // Eliminado el toggleCart() para que no se abra automáticamente
 }
 
 function updateQty(index, delta) {
@@ -169,9 +188,9 @@ function updateQty(index, delta) {
   const newQty = item.qty + delta;
   
   if (newQty <= 0) {
-    cart.splice(index, 1); // Quitar si llega a 0
+    cart.splice(index, 1); 
   } else if (newQty > item.stock) {
-    alert(`El stock máximo para este equipo es de ${item.stock} unidad(es).`);
+    showToast(`El límite de stock es de ${item.stock} unidad(es).`);
   } else {
     item.qty = newQty;
   }
@@ -200,9 +219,9 @@ function renderCartUI() {
   cart.forEach((item, idx) => {
     totalCount += item.qty;
     const itemPriceNum = parsePriceToInt(item.price);
-    totalPrice += itemPriceNum * item.qty;
+    const subtotal = itemPriceNum * item.qty;
+    totalPrice += subtotal;
 
-    // Foto para mostrar en el carrito (la primera si es combo, sino la normal)
     const displayImg = item.isCombo && item.images && item.images.length > 0 ? item.images[0] : item.img;
     const imgSrc = displayImg ? IMG_BASE + displayImg : '';
 
@@ -213,12 +232,16 @@ function renderCartUI() {
       </div>
       <div class="cart-item-info">
         <div class="cart-item-name">${escHtml(item.name)}</div>
-        <div class="cart-item-price">${escHtml(item.price)}</div>
-        <div class="cart-item-controls">
-          <button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button>
-          <span class="qty-val">${item.qty}</span>
-          <button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button>
-          <button class="cart-item-remove" onclick="updateQty(${idx}, -${item.qty})">Quitar</button>
+        <div class="cart-item-bottom">
+          <div class="cart-item-controls">
+            <button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button>
+            <span class="qty-val">${item.qty}</span>
+            <button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button>
+            <button class="cart-item-remove" onclick="updateQty(${idx}, -${item.qty})" title="Quitar item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
+          <div class="cart-item-price">$${formatNumber(subtotal)}</div>
         </div>
       </div>
     </div>`;
@@ -229,22 +252,49 @@ function renderCartUI() {
   totalEl.innerText = `$${formatNumber(totalPrice)}`;
 }
 
-// Envío a WhatsApp
+// Setear fecha por defecto a mañana
+function initCartDefaults() {
+  const dateInput = document.getElementById('cart-date');
+  if (dateInput) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yyyy = tomorrow.getFullYear();
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const dd = String(tomorrow.getDate()).padStart(2, '0');
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+  }
+}
+// Ejecutar una vez cargue el script
+initCartDefaults();
+
+// Envío a WhatsApp (Formato recalculado y limpio)
 function checkout() {
-  if (cart.length === 0) return alert("El carrito está vacío.");
+  if (cart.length === 0) return showToast("El carrito está vacío.");
   
+  const dateVal = document.getElementById('cart-date').value;
+  const daysVal = document.getElementById('cart-days').value || 1;
+
+  // Transformar YYYY-MM-DD a DD/MM/YYYY
+  const [y, m, d] = dateVal.split('-');
+  const dateFormatted = d ? `${d}/${m}/${y}` : 'A confirmar';
+
   let msg = "Hola Ullathorpe! Quiero reservar lo siguiente:\n\n";
   let totalPrice = 0;
   
   cart.forEach(item => {
     const pNum = parsePriceToInt(item.price);
-    totalPrice += pNum * item.qty;
-    msg += `- ${item.qty}x ${item.name} (${item.price} c/u)\n`;
+    const subtotal = pNum * item.qty;
+    totalPrice += subtotal;
+    
+    // Formato: - 1x Item Nombre $X.XXX
+    msg += `- ${item.qty}x ${item.name} $${formatNumber(subtotal)}\n`;
   });
   
-  msg += `\n*Total est.: $${formatNumber(totalPrice)}* (sin IVA)\n\nEspero confirmación de disponibilidad.`;
+  msg += `\n*Total: $${formatNumber(totalPrice)}*\n\n`;
+  msg += `📅 Fecha de retiro: ${dateFormatted}\n`;
+  msg += `⏳ Jornadas: ${daysVal}\n\n`;
+  msg += `Espero confirmación de disponibilidad.`;
   
-  // Enviamos por WhatsApp codificando los saltos de línea (\n)
   openWsp(msg);
 }
 

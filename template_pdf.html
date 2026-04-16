@@ -58,7 +58,7 @@
         .logo-halo {
             width: 480px;
             height: 480px;
-            margin-bottom: 10px; /* Reducido un poco para acercar el slogan */
+            margin-bottom: 10px; 
             background: radial-gradient(circle at center, rgba(232,224,208,0.35) 0%, transparent 65%);
             border-radius: 50%;
             display: flex;
@@ -68,17 +68,14 @@
 
         .logo-halo img { width: 350px; object-fit: contain; }
 
-        /* LISTA DE PRECIOS ELIMINADA */
-
-        /* Slogan agrandado y blindado en un solo renglón */
         .cover-content .subtitle {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem; /* Agrandado */
+            font-size: 2.2rem; 
             color: var(--gold);
             font-style: italic;
-            margin-top: 10px; /* Acercado hacia arriba */
+            margin-top: 10px; 
             letter-spacing: 1px;
-            white-space: nowrap; /* Nunca se rompe en dos renglones */
+            white-space: nowrap; 
         }
 
         .cover-content .wsp-info {
@@ -148,7 +145,7 @@
             font-size: 1.5rem;
         }
 
-        /* ════ ENCABEZADO Y CONTENIDO ════ */
+        /* ════ ENCABEZADO ════ */
         .header-mini {
             border-bottom: 1px solid var(--gold);
             padding-bottom: 6px;
@@ -162,12 +159,12 @@
 
         .category-header-wrap {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             margin-bottom: 20px;
+            min-height: 40px; 
         }
 
-        /* Título con prevención de quiebre (el tamaño se maneja dinámicamente) */
         h2.categoria-titulo {
             font-family: 'Cormorant Garamond', serif;
             color: var(--gold);
@@ -177,7 +174,6 @@
             white-space: nowrap; 
             overflow: hidden;
             text-overflow: ellipsis; 
-            padding-right: 15px; 
         }
 
         .back-to-index {
@@ -212,7 +208,7 @@
             gap: 20px;
         }
 
-        /* ════ ÍTEMS DE CATÁLOGO (ARQUITECTURA ABSOLUTA) ════ */
+        /* ════ ÍTEMS DE CATÁLOGO ════ */
         .item-row {
             display: flex;
             align-items: stretch; 
@@ -244,6 +240,8 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            filter: drop-shadow(0px 0px 10px var(--gold));
+            -webkit-filter: drop-shadow(0px 0px 10px var(--gold));
         }
 
         .item-content-wrap {
@@ -292,7 +290,7 @@
             white-space: nowrap;
         }
 
-        /* ════ SECCIÓN COMBOS (ARQUITECTURA ABSOLUTA) ════ */
+        /* ════ SECCIÓN COMBOS ════ */
         .combo-card {
             display: flex;
             flex-direction: column;
@@ -380,7 +378,6 @@
             line-height: 1.2;
         }
 
-        /* La galería impone la distribución equitativa de las cajas negras */
         .combo-gallery {
             display: flex;
             gap: 15px;
@@ -391,7 +388,6 @@
             box-sizing: border-box;
         }
 
-        /* La caja negra es estricta y matemática */
         .combo-gallery-box {
             flex: 1;
             background: #1e1e1e;
@@ -401,7 +397,6 @@
             box-sizing: border-box;
         }
 
-        /* Contenedor fantasma que neutraliza el bug de WeasyPrint */
         .combo-img-container {
             position: relative;
             width: 100%;
@@ -415,6 +410,8 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            filter: drop-shadow(0px 0px 10px var(--gold));
+            -webkit-filter: drop-shadow(0px 0px 10px var(--gold));
         }
     </style>
 </head>
@@ -447,12 +444,14 @@
                     {% endfor %}
                 </ul>
 
+                {% if toc_combos %}
                 <div class="toc-section-title">Kits</div>
                 <ul class="toc-list">
                     {% for item in toc_combos %}
                         <li><a href="#{{ item.id }}" class="toc-link">{{ item.titulo }}</a></li>
                     {% endfor %}
                 </ul>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -470,7 +469,7 @@
                 style="font-size: {% if pagina.titulo_pagina|length > 32 %}1.4rem{% elif pagina.titulo_pagina|length > 22 %}1.8rem{% else %}2.3rem{% endif %};">
                 {{ pagina.titulo_pagina }}
             </h2>
-            </div>
+        </div>
 
         <div class="items-container-cat">
             {% for item in pagina['items'] %}
@@ -485,10 +484,13 @@
                 
                 <div class="item-content-wrap">
                     <div class="item-info">
-                        {% if item.Subcat_Limpia %}
-                            <span class="item-subcat">{{ pagina.categoria }} | {{ item.Subcat_Limpia }}</span>
-                        {% else %}
-                            <span class="item-subcat">{{ pagina.categoria }}</span>
+                        
+                        {% if mostrar_subcat_items %}
+                            {% if item.Subcat_Limpia %}
+                                <span class="item-subcat">{{ pagina.categoria }} | {{ item.Subcat_Limpia }}</span>
+                            {% else %}
+                                <span class="item-subcat">{{ pagina.categoria }}</span>
+                            {% endif %}
                         {% endif %}
                         
                         <div class="item-nombre">{{ item.Nombre }}</div>
@@ -515,7 +517,7 @@
                 style="font-size: {% if pagina.titulo_pagina|length > 32 %}1.4rem{% elif pagina.titulo_pagina|length > 22 %}1.8rem{% else %}2.3rem{% endif %};">
                 {{ pagina.titulo_pagina }}
             </h2>
-            </div>
+        </div>
 
         <div class="items-container-combo">
             {% for combo in pagina['items'] %}
@@ -524,8 +526,11 @@
                 <div class="combo-top">
                     <div class="combo-price">${{ combo.PrecioLimpio }}</div>
                     <div class="combo-info">
-                        {% if combo.BadgeText %}
-                            <span class="combo-badge badge-{{ combo.BadgeClass }}">{{ combo.BadgeText }}</span>
+                        
+                        {% if mostrar_badges_combos %}
+                            {% if combo.BadgeText %}
+                                <span class="combo-badge badge-{{ combo.BadgeClass }}">{{ combo.BadgeText }}</span>
+                            {% endif %}
                         {% endif %}
                         
                         <div class="combo-name">{{ combo.Nombre }}</div>
@@ -565,11 +570,10 @@
             <div class="logo-halo" style="width: 350px; height: 350px; margin-bottom: 40px; background: radial-gradient(circle at center, rgba(232,224,208,0.2) 0%, transparent 65%);">
                 <img src="img/logo.png" alt="Logo" style="width: 250px;">
             </div>
-            <div class="subtitle">Acompañando a los profesionales desde sus inicios</div>
+            <div class="subtitle" style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--gold); font-style: italic; margin-top: 15px; letter-spacing: 1px; white-space: nowrap;">Acompañando a los profesionales desde sus inicios</div>
             <div class="wsp-info" style="margin-top: 30px;">
                 Pedidos y reservas vía WhatsApp: <strong>011-3030-1420</strong>
             </div>
-            <!-- <div class="date">CATÁLOGO DE EQUIPOS - {{ fecha_actual }}</div> -->
         </div>
     </div>
 

@@ -1,68 +1,73 @@
 # Generador Automático de Catálogos PDF - Ullathorpe Rental 🎬
 
-Este proyecto es una herramienta de automatización escrita en Python que convierte datos dinámicos alojados en Google Sheets en un catálogo PDF de alta gama, con diseño oscuro (dark mode), índice interactivo y maquetación automática.
+Este proyecto es una herramienta de automatización escrita en **Python** que convierte datos dinámicos alojados en **Google Sheets** en un catálogo PDF de alta gama. Cuenta con un diseño oscuro (dark mode) minimalista, índice interactivo, maquetación automática y procesamiento de imágenes en tiempo real.
 
-Utiliza **Python** para la lógica de extracción y agrupación de datos, **Jinja2** para inyectar esos datos en una plantilla, y **WeasyPrint** como motor de renderizado para convertir HTML/CSS en un documento PDF tamaño A4.
+Utiliza la lógica de Python para la extracción, manipulación de imágenes y agrupación de datos; **Jinja2** para inyectar esos datos en una plantilla HTML; y **WeasyPrint** como motor de renderizado para compilar el documento final en tamaño A4.
 
 ---
 
 ## 📂 Estructura del Proyecto
 
-* `generar_pdf.py`: Script principal que ejecuta toda la lógica de negocio.
-* `template_pdf.html`: Plantilla base con el diseño visual y las reglas CSS específicas para WeasyPrint.
-* `img/`: Carpeta local que debe contener las imágenes de los equipos referenciadas en el Excel, además de `logo.png` y `logo_leon.png`.
+* `generar_pdf.py`: Script principal que funciona como motor del proyecto. Controla la lógica, descarga los datos, procesa las imágenes y genera el PDF.
+* `template_pdf.html`: Plantilla base con el diseño visual, las fuentes tipográficas y las reglas CSS estructuradas específicamente para WeasyPrint.
+* `img/`: Carpeta local que almacena los recursos visuales fijos (`logo.png`, `logo_horizontal.png`, `logo_leon.png`) y la subcarpeta `catalogo/` donde deben estar los PNGs de los equipos referenciados en el Excel.
 
 ---
 
-## ⚙️ 1. El Motor: `generar_pdf.py`
+## ⚙️ 1. Panel de Configuración (El Motor)
 
-Este script se encarga de descargar, limpiar, calcular y agrupar los datos antes de enviarlos al diseño.
+Al inicio del archivo `generar_pdf.py` existe un bloque de variables globales diseñadas para que cualquier persona del equipo pueda modificar el PDF sin saber programar.
 
-### Variables de Configuración (Los "Switches")
-Al inicio del archivo hay variables de control que permiten cambiar la estructura del PDF sin tocar código complejo:
-* `INCLUIR_COMBOS (True/False)`: Permite apagar por completo la pestaña de Kits/Combos. Si es `False`, el script ignora esos datos y no los muestra ni en el catálogo ni en el índice interactivo.
-* `MOSTRAR_SUBCAT_ITEMS (True/False)`: Controla si se imprime la "Etiqueta" roja (Ej: *CÁMARAS | MIRRORLESS*) arriba del nombre del equipo en el catálogo.
-* `MOSTRAR_BADGES_COMBOS (True/False)`: Controla si se muestran los niveles (Ej: *NEWBIE*, *PRO*) en las tarjetas de combos.
+### Variables de Control (Switches: True / False)
+* `INCLUIR_INDICE`: Si está en `True`, genera una hoja inicial con el índice interactivo a una columna. Si es `False`, la omite.
+* `INCLUIR_COMBOS`: Permite apagar por completo la pestaña de Kits Promocionales. Si es `False`, el script ignora los datos, no genera sus hojas y los oculta del índice.
+* `MOSTRAR_SUBCAT_ITEMS`: Muestra u oculta la "Etiqueta" roja (Ej: *CÁMARAS | MIRRORLESS*) arriba del nombre de cada equipo en el catálogo.
+* `MOSTRAR_BADGES_COMBOS`: Muestra u oculta las etiquetas de nivel (Ej: *NEWBIE*, *INTERMEDIO*) en las tarjetas de los combos.
 
-### Lógica de Agrupación y Paginación
-El script no tira los datos crudos, sino que los organiza de forma inteligente (4 ítems por página para catálogo, 2 para combos):
-* **Subcategorías Grandes (≥ 3 ítems):** Si una subcategoría tiene muchos equipos, el script le otorga páginas exclusivas. El título de la página será compuesto (Ej: `VIDEO | CÁMARAS`).
-* **Subcategorías Chicas (< 3 ítems):** Para no desperdiciar hojas con un solo ítem, el script junta ítems sueltos en una misma página. Si junta cosas mezcladas, el título de la página sube a la jerarquía padre (Ej: solo `VIDEO`).
+### Textos Parametrizados
+Para no tener que tocar el HTML, los textos clave se cambian desde el script:
+* `TEXTO_SLOGAN`: Frase que aparece en la carátula y contraportada (Ej: *"Acompañando a los profesionales desde sus inicios"*).
+* `TEXTO_CONTRAPORTADA`: Cita principal que cierra el catálogo de forma elegante.
+* `TELEFONO_WHATSAPP`: Número de contacto para reservas.
 
-### 💡 Trucos y Hacks en el Python
-1.  **Disfraz de Navegador (User-Agent):** Google Sheets a veces bloquea o demora infinitamente (`TimeoutError`) las peticiones que vienen de scripts anónimos. El truco fue agregarle a la petición de `urllib` un encabezado (`headers`) haciéndose pasar por Google Chrome de Windows. Esto asegura que la descarga del CSV sea casi instantánea.
-2.  **Cálculo Dinámico de Fuentes:** El script cuenta los caracteres (el `length`) del nombre y la descripción de los equipos. Si detecta nombres muy largos (ej. más de 60 caracteres), ajusta dinámicamente la variable de la fuente (`f_cat_nombre`) para que WeasyPrint la renderice más chica y evite desbordes visuales.
+### Configuración del Trazo de Imágenes
+* `TRAZO_DORADO_PX` y `TRAZO_COLOR`: Controlan el grosor y color exacto de la línea que abrazará las siluetas de los equipos fotográficos.
 
 ---
 
-## 🎨 2. El Diseño: `template_pdf.html`
+## 🧠 2. La Magia del Script (Características Técnicas)
 
-Es el esqueleto visual. Está escrito en HTML y CSS puro, pero está plagado de variables de Jinja2 (`{{ variable }}`) que Python reemplaza en tiempo real.
+### 🖼️ Procesamiento de Imágenes "On the Fly"
+WeasyPrint tiene limitaciones para renderizar efectos CSS complejos sobre transparencias. Para resolver esto, el script utiliza **Pillow (PIL)** y **NumPy** para leer cada `.png` del catálogo, analizar su canal Alfa (transparencia), dilatar la forma (`MaxFilter`) y dibujar matemáticamente un trazo dorado (`#C9A84C`) que sigue la silueta exacta de la cámara o lente.
+Estas imágenes trazadas se guardan en una carpeta temporal (`_temp_trazadas`) que se elimina automáticamente al terminar de generar el PDF.
 
-### Tipografía y Colores
-* **Cormorant Garamond:** Fuente Serif usada para aportar elegancia (títulos, nombres de equipos, precios).
-* **Outfit:** Fuente Sans-Serif usada para los datos técnicos y descripciones por su alta legibilidad.
-* Usa un sistema de variables nativas de CSS (`:root`) para manejar la paleta de colores de la marca (dorado `#C9A84C`, bordó `#9b2525`, grises y negros).
+### 📚 Agrupación y Paginación Inteligente
+El script no "escupe" los datos crudos, sino que cuenta y agrupa los equipos (4 ítems por página de catálogo, 2 para combos):
+* **Subcategorías Grandes (≥ 3 ítems):** Tienen páginas exclusivas. El título adopta el formato compuesto (`CATEGORÍA | SUBCATEGORÍA`).
+* **Subcategorías Chicas (< 3 ítems):** Se agrupan en una misma página para no desperdiciar papel. Si en esa hoja hay equipos de subcategorías distintas, el título de la página se limpia mostrando únicamente la `CATEGORÍA` madre.
 
-### 💡 Trucos y Hacks Anti-WeasyPrint
-WeasyPrint es un motor estricto y a veces se "rompe" al tratar de interpretar reglas web modernas (como Flexbox). Este template tiene "blindajes" específicos:
+### 🕵️‍♂️ Disfraz de Navegador (Bypass de Google)
+Para evitar que Google Sheets bloquee la descarga o genere un "TimeoutError", la petición a través de `urllib` inyecta un `User-Agent` haciéndose pasar por el navegador Google Chrome. Esto asegura descargas de CSV instantáneas y sin fallos.
 
-1.  **La Arquitectura Absoluta (Anti-Cortes de Imagen):** * *El problema:* Si un archivo `.png` original es de 3000x3000px, WeasyPrint ignora los contenedores e intenta dibujar la imagen gigante, cortándola y rompiendo los recuadros negros.
-    * *La solución (El truco):* Se sacó a la imagen del flujo de `Flexbox`. El contenedor negro tiene medidas matemáticas rígidas. Adentro, un contenedor "fantasma" (`position: relative`) ancla a la imagen (`position: absolute; width: 100%; height: 100%; object-fit: contain;`). Así, la imagen está obligada a encerrarse en la caja, sin importar su tamaño de origen.
-2.  **Prevención de Quiebre de Títulos (`white-space: nowrap`):** * Para evitar que títulos largos choquen y empujen los elementos hacia abajo desarmando la hoja, los encabezados tienen reglas estrictas que impiden que el texto pase a un segundo renglón. Además, mediante Jinja (`{% raw %}{% if pagina.titulo_pagina|length > 32 %}{% endraw %}`), el tamaño de la letra del título se achica automáticamente en el HTML si es muy largo.
-3.  **Botones Inamovibles (`flex-shrink: 0`):** * Botones y logos tienen esta regla para indicar que, ante la falta de espacio, el motor *no tiene permitido* comprimirlos.
-4.  **Trazo Dorado en PNGs Transparentes:**
-    * En lugar de usar un `border` clásico (que haría un cuadrado feo), se configuró un `filter: drop-shadow(0 0 10px var(--gold))` en las imágenes. Esto lee el canal Alfa de la foto de la cámara/lente y dibuja un halo dorado exactamente por el borde del equipo. *(Nota: El soporte de este filtro visual depende de la versión exacta de WeasyPrint y sus librerías gráficas subyacentes, como Cairo/Pango).*
+---
+
+## 🎨 3. El Diseño y las Defensas Anti-WeasyPrint
+
+El archivo `template_pdf.html` está maquetado en CSS/HTML puro, pero lleno de etiquetas de Jinja2 (`{{ variable }}`) y condicionales (`{% if %}`).
+* **Tipografías:** Combina *Cormorant Garamond* (elegancia clásica para títulos/precios) y *Outfit* (modernidad y legibilidad para descripciones técnicas).
+* **Blindaje Anti-Desbordes (Flexbox vs Absolute):** Las fotos originales pueden ser inmensas. Para evitar que rompan las cajas de diseño al renderizar, el contenedor negro usa posiciones relativas, y la imagen adentro es forzada con posición absoluta (`position: absolute; width: 100%; height: 100%; object-fit: contain;`). Así, la imagen obedece al diseño de forma obligatoria.
+* **Cálculo Dinámico de Textos:** En el HTML se usa la sintaxis `{% raw %}{% if pagina.titulo_pagina|length > 32 %}{% endraw %}`. Si un título es excesivamente largo, Jinja achica dinámicamente su tamaño de fuente en rems antes de enviárselo a WeasyPrint, garantizando que nunca se rompa en dos renglones.
 
 ---
 
 ## 🚀 Cómo ejecutarlo
 
-1.  Asegurate de tener tu entorno virtual activado (`.venv`).
-2.  Verificá que los links públicos de Google Sheets en el `generar_pdf.py` estén activos y en formato CSV/TSV.
-3.  Asegurate de que la carpeta `img/catalogo/` contenga las fotos referenciadas en el Excel.
-4.  Ejecutá el script:
+1.  Asegurate de tener tu entorno virtual de Python activado (ej. `.venv`).
+2.  Instalá las dependencias requeridas (generalmente `weasyprint`, `jinja2`, `Pillow`, `numpy`).
+3.  Verificá que los links públicos de Google Sheets en el `generar_pdf.py` sigan activos.
+4.  Asegurate de que la carpeta `img/catalogo/` contenga todas las fotos con los nombres exactos que figuran en el Excel.
+5.  Ejecutá el script:
     ```bash
     python generar_pdf.py
     ```
-5.  El sistema procesará la información y arrojará el archivo final: **`Lista_de_Precios_Ullathorpe.pdf`**.
+6.  El sistema procesará las imágenes temporales, renderizará la web y arrojará el archivo final listo para enviar al cliente: **`Lista_de_Precios_Ullathorpe.pdf`**.

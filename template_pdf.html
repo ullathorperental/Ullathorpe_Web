@@ -101,7 +101,7 @@
 
         /* ════ ÍNDICE ════ */
         .toc-container {
-            margin: 40px auto;
+            margin: 20px auto;
             width: 80%;
             display: flex;
             flex-direction: column;
@@ -117,15 +117,18 @@
             margin-top: 20px;
             text-transform: uppercase;
             letter-spacing: 2px;
+            text-align: left;
+            width: 80%;
         }
 
+        /* Alineación vertical a 1 sola columna para el índice */
         .toc-list {
             list-style: none;
             padding: 0;
             margin: 0;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .toc-link {
@@ -145,18 +148,7 @@
             font-size: 1.5rem;
         }
 
-        /* ════ ENCABEZADO ════ */
-        .header-mini {
-            border-bottom: 1px solid var(--gold);
-            padding-bottom: 6px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-        }
-
+        /* ════ ENCABEZADO DE CATEGORÍAS ════ */
         .category-header-wrap {
             display: flex;
             justify-content: flex-start;
@@ -240,8 +232,24 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            filter: drop-shadow(0px 0px 10px var(--gold));
-            -webkit-filter: drop-shadow(0px 0px 10px var(--gold));
+            filter:
+                drop-shadow( 0px  2px 0px var(--gold))
+                drop-shadow( 0px -2px 0px var(--gold))
+                drop-shadow( 2px  0px 0px var(--gold))
+                drop-shadow(-2px  0px 0px var(--gold))
+                drop-shadow( 2px  2px 0px var(--gold))
+                drop-shadow(-2px -2px 0px var(--gold))
+                drop-shadow( 2px -2px 0px var(--gold))
+                drop-shadow(-2px  2px 0px var(--gold));
+            -webkit-filter:
+                drop-shadow( 0px  2px 0px var(--gold))
+                drop-shadow( 0px -2px 0px var(--gold))
+                drop-shadow( 2px  0px 0px var(--gold))
+                drop-shadow(-2px  0px 0px var(--gold))
+                drop-shadow( 2px  2px 0px var(--gold))
+                drop-shadow(-2px -2px 0px var(--gold))
+                drop-shadow( 2px -2px 0px var(--gold))
+                drop-shadow(-2px  2px 0px var(--gold));
         }
 
         .item-content-wrap {
@@ -410,8 +418,24 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            filter: drop-shadow(0px 0px 10px var(--gold));
-            -webkit-filter: drop-shadow(0px 0px 10px var(--gold));
+            filter:
+                drop-shadow( 0px  2px 0px var(--gold))
+                drop-shadow( 0px -2px 0px var(--gold))
+                drop-shadow( 2px  0px 0px var(--gold))
+                drop-shadow(-2px  0px 0px var(--gold))
+                drop-shadow( 2px  2px 0px var(--gold))
+                drop-shadow(-2px -2px 0px var(--gold))
+                drop-shadow( 2px -2px 0px var(--gold))
+                drop-shadow(-2px  2px 0px var(--gold));
+            -webkit-filter:
+                drop-shadow( 0px  2px 0px var(--gold))
+                drop-shadow( 0px -2px 0px var(--gold))
+                drop-shadow( 2px  0px 0px var(--gold))
+                drop-shadow(-2px  0px 0px var(--gold))
+                drop-shadow( 2px  2px 0px var(--gold))
+                drop-shadow(-2px -2px 0px var(--gold))
+                drop-shadow( 2px -2px 0px var(--gold))
+                drop-shadow(-2px  2px 0px var(--gold));
         }
     </style>
 </head>
@@ -422,46 +446,41 @@
             <div class="logo-halo">
                 <img src="img/logo.png" alt="Logo">
             </div>
-            <div class="subtitle">Acompañando a los profesionales desde sus inicios</div>
+            
+            <div class="subtitle">{{ texto_slogan }}</div>
             
             <div class="wsp-info">
-                Pedidos y reservas vía WhatsApp: <strong>011-3030-1420</strong>
+                Pedidos y reservas vía WhatsApp: <strong>{{ telefono_whatsapp }}</strong>
             </div>
 
             <div class="date">CATÁLOGO DE EQUIPOS - {{ fecha_actual }}</div>
         </div>
     </div>
 
+    {% if incluir_indice %}
     <div class="pdf-page" id="indice">
         <div class="cover-content" style="justify-content: flex-start; padding-top: 50px;">
-            <h1 style="font-size: 4rem; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 40px;">Índice</h1>
+            <div class="toc-section-title" style="margin-bottom: 30px;">ÍNDICE</div>
             
             <div class="toc-container">
-                <div class="toc-section-title">Catálogo</div>
                 <ul class="toc-list">
                     {% for item in toc_catalogo %}
                         <li><a href="#{{ item.id }}" class="toc-link">{{ item.titulo }}</a></li>
                     {% endfor %}
-                </ul>
 
-                {% if toc_combos %}
-                <div class="toc-section-title">Kits</div>
-                <ul class="toc-list">
-                    {% for item in toc_combos %}
-                        <li><a href="#{{ item.id }}" class="toc-link">{{ item.titulo }}</a></li>
-                    {% endfor %}
+                    {% if toc_combos %}
+                        {% for item in toc_combos %}
+                            <li><a href="#{{ item.id }}" class="toc-link">{{ item.titulo }}</a></li>
+                        {% endfor %}
+                    {% endif %}
                 </ul>
-                {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
 
     {% for pagina in paginas_catalogo %}
     <div class="pdf-page">
-        <div class="header-mini">
-            <span>CATÁLOGO DE EQUIPAMIENTO</span>
-            <span>JORNADA 23HS · SIN IVA</span>
-        </div>
         
         <div class="category-header-wrap">
             <h2 class="categoria-titulo" 
@@ -477,7 +496,7 @@
                 <div class="item-img">
                     {% if item.Imagen %}
                         <div class="item-img-container">
-                            <img src="img/catalogo/{{ item.Imagen }}">
+                            <img src="{{ ruta_img_catalogo }}/{{ item.Imagen }}">
                         </div>
                     {% endif %}
                 </div>
@@ -506,10 +525,6 @@
 
     {% for pagina in paginas_combos %}
     <div class="pdf-page">
-        <div class="header-mini">
-            <span>KITS PROMOCIONALES</span>
-            <span>JORNADA 23HS · SIN IVA</span>
-        </div>
         
         <div class="category-header-wrap">
             <h2 class="categoria-titulo" 
@@ -549,7 +564,7 @@
                     {% for img in combo.ListaImagenes %}
                         <div class="combo-gallery-box">
                             <div class="combo-img-container">
-                                <img src="img/catalogo/{{ img }}">
+                                <img src="{{ ruta_img_catalogo }}/{{ img }}">
                             </div>
                         </div>
                     {% endfor %}
@@ -570,9 +585,13 @@
             <div class="logo-halo" style="width: 350px; height: 350px; margin-bottom: 40px; background: radial-gradient(circle at center, rgba(232,224,208,0.2) 0%, transparent 65%);">
                 <img src="img/logo.png" alt="Logo" style="width: 250px;">
             </div>
-            <div class="subtitle" style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--gold); font-style: italic; margin-top: 15px; letter-spacing: 1px; white-space: nowrap;">Acompañando a los profesionales desde sus inicios</div>
+            
+            <div class="subtitle" style="font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--gold); font-style: italic; margin-top: 15px; letter-spacing: 1px; white-space: nowrap;">
+                {{ texto_slogan }}
+            </div>
+            
             <div class="wsp-info" style="margin-top: 30px;">
-                Pedidos y reservas vía WhatsApp: <strong>011-3030-1420</strong>
+                Pedidos y reservas vía WhatsApp: <strong>{{ telefono_whatsapp }}</strong>
             </div>
         </div>
     </div>

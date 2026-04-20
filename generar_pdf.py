@@ -113,6 +113,28 @@ def limpiar_precio(precio_raw):
     if p.endswith('.00'): p = p[:-3]
     return p
 
+# Función robusta para pluralizar en español y términos audiovisuales
+def pluralizar_es(palabra):
+    if not palabra:
+        return palabra
+    p = palabra.strip().upper()
+    
+    # Si ya termina en S, asumimos que ya está en plural o no requiere cambio
+    if p.endswith('S'):
+        return p
+    # Regla: Z -> CES (Ej: LUZ -> LUCES)
+    if p.endswith('Z'):
+        return p[:-1] + 'CES'
+    # Regla: Termina en Vocal -> S (Ej: LENTE -> LENTES)
+    if p[-1] in 'AEIOUÁÉÍÓÚ':
+        return p + 'S'
+    # Extranjerismos comunes del rubro: Terminan en T, P, K, D, M, G suman 'S' en vez de 'ES'
+    # (Ej: KIT -> KITS, GRIP -> GRIPS, LED -> LEDS, BOOM -> BOOMS)
+    if p[-1] in 'TPKDMG': 
+        return p + 'S'
+    # Por defecto, consonantes españolas suman 'ES' (Ej: MONITOR -> MONITORES, GIMBAL -> GIMBALES)
+    return p + 'ES'
+
 
 # --- DESCARGA DE DATOS ---
 print("Descargando datos de Google Sheets...")
@@ -210,10 +232,13 @@ for cat, subcats_dict in catalogo_jerarquico.items():
 
     first_page_of_cat = True
 
+    # Bloque de subcategorías grandes (3 o más)
     for subcat, items in large_subcats.items():
         for i in range(0, len(items), ITEMS_POR_PAGINA):
             bloque = items[i:i + ITEMS_POR_PAGINA]
-            titulo_pagina = f"{cat} | {subcat}" if subcat else cat
+            
+            # ⚡ ACÁ EL CAMBIO: Solo se muestra la subcategoría en plural (o la cat si viene vacío por error de carga)
+            titulo_pagina = pluralizar_es(subcat) if subcat else cat
 
             paginas_catalogo.append({
                 'titulo_pagina': titulo_pagina,
@@ -223,19 +248,12 @@ for cat, subcats_dict in catalogo_jerarquico.items():
             })
             first_page_of_cat = False
 
+    # Bloque de subcategorías chicas (1 o 2 ítems) agrupadas
     for i in range(0, len(small_subcats_items), ITEMS_POR_PAGINA):
         bloque = small_subcats_items[i:i + ITEMS_POR_PAGINA]
 
-        subcats_in_block = []
-        for item in bloque:
-            sub = item.get('Subcat_Limpia', '').strip().upper()
-            if sub and sub not in subcats_in_block:
-                subcats_in_block.append(sub)
-
-        if len(subcats_in_block) == 1:
-            titulo_pagina = f"{cat} | {subcats_in_block[0]}"
-        else:
-            titulo_pagina = cat
+        # ⚡ ACÁ EL CAMBIO: Siempre se muestra únicamente la Categoría para 1 o 2 ítems
+        titulo_pagina = cat
 
         paginas_catalogo.append({
             'titulo_pagina': titulo_pagina,

@@ -444,16 +444,17 @@ async function loadData() {
 
     buildMainFilters();
 
-    // Evento para buscador de texto
+    // Evento para buscador de texto (en tiempo real)
     const searchInput = document.getElementById('cat-search');
     if (searchInput) {
       searchInput.addEventListener('input', () => {
-        renderCatalog(); // Se vuelve a renderizar cada vez que se tipea una letra
+        buildMainFilters(); // Esto hace que las botoneras se adapten a las palabras
+        renderCatalog();    // Esto muestra las tarjetas
       });
     }
 
     renderCatalog();
-    renderCartUI(); // Inicializamos la burbuja del carrito si había datos guardados
+    renderCartUI();
 
   } catch (err) {
     grid.innerHTML = `<div class="sheet-error" style="grid-column:1/-1">
@@ -465,13 +466,41 @@ async function loadData() {
   }
 }
 
-/* ── Generar botones principales ── */
+/* ── Función central para obtener items filtrados por texto ── */
+function getSearchedItems() {
+  const searchInput = document.getElementById('cat-search');
+  const query = normalizeText(searchInput ? searchInput.value : '');
+  
+  if (!query) return catalogData;
+
+  // Dividimos la frase en palabras separadas por espacios
+  const words = query.split(/\s+/).filter(w => w.length > 0);
+
+  return catalogData.filter(item => {
+    const comboItemsText = item.items ? item.items.join(' ') : '';
+    // Unimos todos los textos posibles del ítem
+    const searchTarget = normalizeText(`${item.name} ${item.cat} ${item.subcat} ${item.desc || ''} ${comboItemsText}`);
+    
+    // Verificamos que TODAS las palabras tipeadas existan en algún lado del ítem
+    return words.every(word => searchTarget.includes(word));
+  });
+}
+
+/* ── Generar botones principales (Dinámicos según búsqueda) ── */
 function buildMainFilters() {
   const container = document.getElementById('main-filters');
   if (!container) return;
 
-  const categories = [...new Set(catalogData.filter(i => !i.isCombo).map(item => item.cat))].filter(Boolean);
-  if (catalogData.some(i => i.isCombo)) categories.push('Combos');
+  // En lugar de leer todo el catálogo, leemos solo lo que el buscador filtró
+  const searchedData = getSearchedItems();
+
+  const categories = [...new Set(searchedData.filter(i => !i.isCombo).map(item => item.cat))].filter(Boolean);
+  if (searchedData.some(i => i.isCombo)) categories.push('Combos');
+
+  // Si la categoría seleccionada actual ya no existe en la búsqueda, la reseteamos a 'Todos'
+  if (currentCat !== 'all' && !categories.includes(currentCat)) {
+    currentCat = 'all';
+  }
 
   let html = `<button class="filter-btn ${currentCat === 'all' ? 'active' : ''}" data-cat="all">Todos</button>`;
   
@@ -489,11 +518,11 @@ function buildMainFilters() {
     });
   });
 
-  buildSubFilters();
+  buildSubFilters(searchedData);
 }
 
-/* ── Generar botones de subcategoría ── */
-function buildSubFilters() {
+/* ── Generar botones de subcategoría (Dinámicos según búsqueda) ── */
+function buildSubFilters(searchedData = getSearchedItems()) {
   const container = document.getElementById('subcat-filters');
   if (!container) return;
 
@@ -505,13 +534,18 @@ function buildSubFilters() {
   let subcats = [];
 
   if (currentCat === 'Combos') {
-    subcats = [...new Set(catalogData.filter(i => i.isCombo).map(i => i.cat))].filter(Boolean);
+    subcats = [...new Set(searchedData.filter(i => i.isCombo).map(i => i.cat))].filter(Boolean);
   } else {
-    subcats = [...new Set(catalogData.filter(i => i.cat === currentCat).map(i => i.subcat))].filter(Boolean);
+    subcats = [...new Set(searchedData.filter(i => i.cat === currentCat).map(i => i.subcat))].filter(Boolean);
     if (subcats.includes('Combos')) {
       subcats = subcats.filter(sc => sc !== 'Combos');
       subcats.push('Combos');
     }
+  }
+
+  // Si la subcategoría seleccionada actual ya no existe en la búsqueda, la reseteamos a 'Todas'
+  if (currentSubcat !== 'all' && !subcats.includes(currentSubcat)) {
+    currentSubcat = 'all';
   }
 
   if (subcats.length === 0) {
@@ -530,7 +564,7 @@ function buildSubFilters() {
   container.querySelectorAll('.subcat-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       currentSubcat = e.target.dataset.subcat;
-      buildSubFilters();
+      buildSubFilters(searchedData);
       renderCatalog();
     });
   });
@@ -540,28 +574,16 @@ function buildSubFilters() {
 function renderCatalog() {
   const grid = document.getElementById('cat-grid');
   
-  let items = catalogData;
+  // 1. Obtenemos los ítems pre-filtrados por texto
+  let items = getSearchedItems(); 
 
+  // 2. Aplicamos la lógica de visualización según botones seleccionados
   if (currentCat === 'Combos') {
     items = items.filter(i => i.isCombo);
     if (currentSubcat !== 'all') items = items.filter(i => i.cat === currentSubcat);
   } else if (currentCat !== 'all') {
     items = items.filter(i => i.cat === currentCat);
     if (currentSubcat !== 'all') items = items.filter(i => i.subcat === currentSubcat);
-  }
-
-  // ── Filtro por Buscador de Texto ──
-  const searchInput = document.getElementById('cat-search');
-  const query = normalizeText(searchInput ? searchInput.value : '');
-
-  if (query) {
-    items = items.filter(item => {
-      // Unimos todos los textos posibles del ítem en una sola cadena para buscar ahí
-      const comboItemsText = item.items ? item.items.join(' ') : '';
-      const searchTarget = normalizeText(`${item.name} ${item.cat} ${item.subcat} ${item.desc || ''} ${comboItemsText}`);
-      
-      return searchTarget.includes(query);
-    });
   }
 
   if (!items.length) {

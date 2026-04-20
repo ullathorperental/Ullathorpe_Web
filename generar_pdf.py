@@ -119,20 +119,14 @@ def pluralizar_es(palabra):
         return palabra
     p = palabra.strip().upper()
     
-    # Si ya termina en S, asumimos que ya está en plural o no requiere cambio
     if p.endswith('S'):
         return p
-    # Regla: Z -> CES (Ej: LUZ -> LUCES)
     if p.endswith('Z'):
         return p[:-1] + 'CES'
-    # Regla: Termina en Vocal -> S (Ej: LENTE -> LENTES)
     if p[-1] in 'AEIOUÁÉÍÓÚ':
         return p + 'S'
-    # Extranjerismos comunes del rubro: Terminan en T, P, K, D, M, G suman 'S' en vez de 'ES'
-    # (Ej: KIT -> KITS, GRIP -> GRIPS, LED -> LEDS, BOOM -> BOOMS)
     if p[-1] in 'TPKDMG': 
         return p + 'S'
-    # Por defecto, consonantes españolas suman 'ES' (Ej: MONITOR -> MONITORES, GIMBAL -> GIMBALES)
     return p + 'ES'
 
 
@@ -237,8 +231,10 @@ for cat, subcats_dict in catalogo_jerarquico.items():
         for i in range(0, len(items), ITEMS_POR_PAGINA):
             bloque = items[i:i + ITEMS_POR_PAGINA]
             
-            # ⚡ ACÁ EL CAMBIO: Solo se muestra la subcategoría en plural (o la cat si viene vacío por error de carga)
-            titulo_pagina = pluralizar_es(subcat) if subcat else cat
+            if cat.strip().upper() == "SONIDO":
+                titulo_pagina = "SONIDO"
+            else:
+                titulo_pagina = pluralizar_es(subcat) if subcat else cat
 
             paginas_catalogo.append({
                 'titulo_pagina': titulo_pagina,
@@ -252,8 +248,25 @@ for cat, subcats_dict in catalogo_jerarquico.items():
     for i in range(0, len(small_subcats_items), ITEMS_POR_PAGINA):
         bloque = small_subcats_items[i:i + ITEMS_POR_PAGINA]
 
-        # ⚡ ACÁ EL CAMBIO: Siempre se muestra únicamente la Categoría para 1 o 2 ítems
-        titulo_pagina = cat
+        subcats_in_block = []
+        for item in bloque:
+            sub = item.get('Subcat_Limpia', '').strip().upper()
+            if sub and sub not in subcats_in_block:
+                subcats_in_block.append(sub)
+
+        # ⚡ LÓGICA REFINADA SIN HARDCODEAR (La magia para Gripería) ⚡
+        if cat.strip().upper() == "SONIDO":
+            titulo_pagina = "SONIDO"
+        elif not large_subcats:
+            # Si TODA la categoría es un conjunto de ítems sueltos (como Gripería), 
+            # no se consideran "Accesorios", sino que son los elementos principales.
+            titulo_pagina = cat
+        elif len(subcats_in_block) > 1:
+            # Si hay ítems grandes y acá se agruparon múltiples sobrantes, son "Accesorios".
+            titulo_pagina = "ACCESORIOS"
+        else:
+            # Si hay ítems grandes pero este resto es de 1 sola subcategoría chica.
+            titulo_pagina = cat
 
         paginas_catalogo.append({
             'titulo_pagina': titulo_pagina,

@@ -3,7 +3,7 @@
 Sitio web oficial de **Ullathorpe Rental**, emprendimiento de alquiler de equipos audiovisuales ubicado en Parque Chacabuco, CABA, Argentina.
 
 📸 Instagram: [@ullathorpe.rental](https://instagram.com/ullathorpe.rental)  
-💬 WhatsApp: [011-3030-1420](https://wa.me/5491130301420)  
+💬 WhatsApp: [011-7020-1017](https://wa.me/5491170201017)  
 📧 Email: ullathorperental@gmail.com
 
 ---

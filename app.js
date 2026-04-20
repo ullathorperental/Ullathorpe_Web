@@ -8,7 +8,7 @@
 /* ── CONFIGURACIÓN ──────────────────────────────────────── */
 const IMG_BASE = 'img/catalogo/';
 const MAX_COMBO_STOCK = 1; // Limite de stock para combos
-const WSP_NUMBER = '5491130301420';
+const WSP_NUMBER = '5491170201017';
 
 /* URLs públicas de Google Sheets (Archivo → Publicar en la web) */
 const SHEET_CATALOGO_URL =
@@ -627,7 +627,7 @@ function buildContactBlock() {
       </div>
       <div class="contact-cards">
         <div class="contact-card" onclick="openWsp()">
-          <div class="ci">💬</div><div class="cl">WhatsApp</div><div class="cv">011-3030-1420</div>
+          <div class="ci">💬</div><div class="cl">WhatsApp</div><div class="cv">011-7020-1017</div>
         </div>
         <a class="contact-card" href="https://www.instagram.com/ullathorpe.rental" target="_blank" rel="noopener">
           <div class="ci">📸</div><div class="cl">Instagram</div><div class="cv">@ullathorpe.rental</div>

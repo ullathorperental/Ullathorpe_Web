@@ -10,7 +10,7 @@ import numpy as np
 
 # --- CONFIGURACIÓN ---
 INCLUIR_INDICE = True   # <-- Cambiá a False para generar el PDF sin la hoja de Índice
-INCLUIR_COMBOS = False  # <-- Cambiá esto a False para generar el PDF sin los combos
+INCLUIR_COMBOS = True  # <-- Cambiá esto a False para generar el PDF sin los combos
 MOSTRAR_SUBCAT_ITEMS = False  # <-- Cambiá a False para ocultar "Categoria | Subcategoria" en el catálogo
 MOSTRAR_BADGES_COMBOS = True # <-- Cambiá a False para ocultar las etiquetas (Ej: "NEWBIE") en los combos
 
@@ -20,7 +20,7 @@ COMBOS_POR_PAGINA = 2
 # --- TEXTOS Y DATOS FIJOS ---
 TEXTO_SLOGAN = "Acompañando a los profesionales desde sus inicios"
 TEXTO_CONTRAPORTADA = "Que tengas un excelente rodaje"
-TELEFONO_WHATSAPP = "011-3030-1420"
+TELEFONO_WHATSAPP = "011-7020-1017"
 
 TRAZO_DORADO_PX = 3           # <-- Grosor del trazo en píxeles (recomendado: 2 a 4)
 TRAZO_COLOR = (201, 168, 76)  # <-- Color dorado del proyecto (#C9A84C)

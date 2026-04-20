@@ -53,7 +53,7 @@ Para evitar que Google Sheets bloquee la descarga o genere un "TimeoutError", la
 
 ## 🎨 3. El Diseño y las Defensas Anti-WeasyPrint
 
-El archivo `template_pdf.html` está maquetado en CSS/HTML puro, pero lleno de etiquetas de Jinja2 (`{{ variable }}`) y condicionales (`{% if %}`).
+El archivo `template_pdf.html` está maquetado en CSS/HTML puro, pero lleno de etiquetas de Jinja2 (`{{ variable }}`) y condicionales (`{% raw %}{% if %}{% endraw %}`).
 * **Tipografías:** Combina *Cormorant Garamond* (elegancia clásica para títulos/precios) y *Outfit* (modernidad y legibilidad para descripciones técnicas).
 * **Blindaje Anti-Desbordes (Flexbox vs Absolute):** Las fotos originales pueden ser inmensas. Para evitar que rompan las cajas de diseño al renderizar, el contenedor negro usa posiciones relativas, y la imagen adentro es forzada con posición absoluta (`position: absolute; width: 100%; height: 100%; object-fit: contain;`). Así, la imagen obedece al diseño de forma obligatoria.
 * **Cálculo Dinámico de Textos:** En el HTML se usa la sintaxis `{% raw %}{% if pagina.titulo_pagina|length > 32 %}{% endraw %}`. Si un título es excesivamente largo, Jinja achica dinámicamente su tamaño de fuente en rems antes de enviárselo a WeasyPrint, garantizando que nunca se rompa en dos renglones.

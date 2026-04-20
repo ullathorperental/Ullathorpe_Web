@@ -92,6 +92,11 @@ function escQuot(s) {
   return (s || '').replace(/'/g, "\\'");
 }
 
+// Nueva función para quitar tildes y pasar a minúsculas
+function normalizeText(text) {
+  return (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
 function formatPrice(val) {
   if (!val) return '';
   // Quitamos el ",00" del final y cualquier espacio extra
@@ -438,6 +443,15 @@ async function loadData() {
     catalogData = [...parsedCatalog, ...parsedCombos];
 
     buildMainFilters();
+
+    // Evento para buscador de texto
+    const searchInput = document.getElementById('cat-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        renderCatalog(); // Se vuelve a renderizar cada vez que se tipea una letra
+      });
+    }
+
     renderCatalog();
     renderCartUI(); // Inicializamos la burbuja del carrito si había datos guardados
 
@@ -536,8 +550,22 @@ function renderCatalog() {
     if (currentSubcat !== 'all') items = items.filter(i => i.subcat === currentSubcat);
   }
 
+  // ── Filtro por Buscador de Texto ──
+  const searchInput = document.getElementById('cat-search');
+  const query = normalizeText(searchInput ? searchInput.value : '');
+
+  if (query) {
+    items = items.filter(item => {
+      // Unimos todos los textos posibles del ítem en una sola cadena para buscar ahí
+      const comboItemsText = item.items ? item.items.join(' ') : '';
+      const searchTarget = normalizeText(`${item.name} ${item.cat} ${item.subcat} ${item.desc || ''} ${comboItemsText}`);
+      
+      return searchTarget.includes(query);
+    });
+  }
+
   if (!items.length) {
-    grid.innerHTML = `<p style="color:var(--text-muted);font-size:.85rem;grid-column:1/-1;text-align:center;padding:2rem">Sin equipos en esta sección.</p>`;
+    grid.innerHTML = `<p style="color:var(--text-muted);font-size:.85rem;grid-column:1/-1;text-align:center;padding:2rem">No se encontraron equipos para esta búsqueda o sección.</p>`;
     return;
   }
 

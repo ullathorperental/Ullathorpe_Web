@@ -242,6 +242,12 @@ h1 .brand { color: var(--gold); font-style: italic; }
 .ql-desc { font-size: .7rem; color: var(--text-muted); }
 
 /* ── CATÁLOGO & COMBOS ── */
+/* ── BUSCADOR CATÁLOGO ── */
+.cat-search-container { max-width: 480px; margin: 0 auto 1.5rem auto; position: relative; display: flex; align-items: center; }
+.cat-search-icon { position: absolute; left: 1.1rem; width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
+#cat-search { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text); padding: 0.8rem 1.2rem 0.8rem 2.8rem; border-radius: 30px; font-family: var(--sans); font-size: 0.9rem; outline: none; transition: all 0.2s; }
+#cat-search:focus { border-color: rgba(201,168,76,0.5); background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(201,168,76,0.1); }
+#cat-search::placeholder { color: var(--text-muted); opacity: 0.7; }
 #page-catalogo { background: var(--dark2); }
 .cat-filters { display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center; margin-bottom: 1.25rem; }
 .subcat-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin-bottom: 2.75rem; }

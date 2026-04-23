@@ -109,14 +109,12 @@
       </p>
     </div>
 
-    <div class="cat-search-container">
-      <svg class="cat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" id="cat-search" placeholder="Buscar equipos, lentes, marcas..." autocomplete="off" />
-    </div>
+    <div class="cat-search-sort-row">
+      <div class="cat-search-container">
+        <svg class="cat-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="cat-search" placeholder="Buscar equipos, lentes, marcas..." autocomplete="off" />
+      </div>
 
-    <div class="cat-controls-row">
-      <div class="cat-filters" id="main-filters"></div>
-      
       <div class="cat-sort-wrapper">
         <span class="sort-prefix">Orden:</span>
         <select id="cat-sort" class="sort-select">
@@ -128,6 +126,8 @@
         </select>
       </div>
     </div>
+
+    <div class="cat-filters" id="main-filters"></div>
 
     <div class="subcat-filters" id="subcat-filters" style="display:none;"></div>
     <div class="cat-grid" id="cat-grid"></div>

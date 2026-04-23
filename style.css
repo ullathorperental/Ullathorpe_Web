@@ -242,14 +242,80 @@ h1 .brand { color: var(--gold); font-style: italic; }
 .ql-desc { font-size: .7rem; color: var(--text-muted); }
 
 /* ── CATÁLOGO & COMBOS ── */
-/* ── BUSCADOR CATÁLOGO ── */
-.cat-search-container { max-width: 480px; margin: 0 auto 1.5rem auto; position: relative; display: flex; align-items: center; }
-.cat-search-icon { position: absolute; left: 1.1rem; width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
-#cat-search { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text); padding: 0.8rem 1.2rem 0.8rem 2.8rem; border-radius: 30px; font-family: var(--sans); font-size: 0.9rem; outline: none; transition: all 0.2s; }
-#cat-search:focus { border-color: rgba(201,168,76,0.5); background: rgba(255,255,255,0.05); box-shadow: 0 0 10px rgba(201,168,76,0.1); }
-#cat-search::placeholder { color: var(--text-muted); opacity: 0.7; }
 #page-catalogo { background: var(--dark2); }
-.cat-filters { display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center; margin-bottom: 1.25rem; }
+
+/* ── BUSCADOR Y ORDEN (Fila Unificada) ── */
+.cat-search-sort-row { 
+  max-width: 700px; 
+  margin: 0 auto 1.5rem auto; 
+  display: flex; 
+  gap: 0.75rem; 
+  align-items: stretch; /* Hace que ambos tengan la misma altura */
+}
+
+.cat-search-container { 
+  flex: 1; 
+  position: relative; 
+  display: flex; 
+  align-items: center; 
+}
+.cat-search-icon { position: absolute; left: 1.1rem; width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
+#cat-search { 
+  width: 100%; height: 100%;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); 
+  color: var(--text); padding: 0.8rem 1.2rem 0.8rem 2.8rem; border-radius: 30px; 
+  font-family: var(--sans); font-size: 0.9rem; outline: none; transition: all 0.2s; 
+}
+#cat-search:focus { border-color: rgba(201,168,76,0.5); background: rgba(255,255,255,0.05); }
+
+/* Botón de Ordenamiento Centrado */
+.cat-sort-wrapper {
+  display: flex; 
+  align-items: center; 
+  justify-content: center; /* Centra el contenido horizontalmente */
+  background: rgba(201,168,76,0.1); 
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 30px; /* Redondeado igual al buscador para armonía */
+  padding: 0 1.2rem;
+  transition: all 0.2s; 
+  cursor: pointer;
+  min-width: 160px; /* Asegura un ancho base para el centrado */
+}
+.cat-sort-wrapper:hover { background: var(--gold); border-color: var(--gold); }
+
+.sort-prefix {
+  font-family: var(--sans); font-size: 0.75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold);
+  transition: color 0.2s; pointer-events: none;
+  margin-right: 4px;
+}
+.sort-select {
+  background: transparent; color: var(--gold); border: none;
+  padding: 0.5rem 0;
+  font-family: var(--sans); font-size: 0.75rem; font-weight: 600; 
+  text-transform: uppercase; cursor: pointer; outline: none; transition: color 0.2s;
+  appearance: none; -webkit-appearance: none;
+  text-align: center; /* Centra el texto en el dropdown */
+  text-align-last: center; /* Refuerza el centrado en navegadores modernos */
+}
+.sort-select option { background: var(--gold); color: var(--dark); font-weight: 700; }
+
+/* Efecto hover: Las letras cambian al color oscuro de fondo */
+.cat-sort-wrapper:hover .sort-prefix,
+.cat-sort-wrapper:hover .sort-select { color: var(--dark); }
+
+/* Ajuste para los filtros de abajo */
+.cat-filters { 
+  display: flex; flex-wrap: wrap; gap: .45rem; justify-content: center; 
+  margin-bottom: 2.75rem !important; 
+}
+
+/* Responsive: En celulares se apilan para que no queden muy apretados */
+@media (max-width: 600px) {
+  .cat-search-sort-row { flex-direction: column; max-width: 100%; }
+  .cat-sort-wrapper { height: 45px; }
+}
+
 .subcat-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; margin-bottom: 2.75rem; }
 .subcat-btn {
   font-family: var(--sans); font-size: 0.65rem; font-weight: 500;
@@ -714,46 +780,6 @@ h1 .brand { color: var(--gold); font-style: italic; }
   z-index: 5; /* Por debajo de la insignia */
 }
 
-/* ── CONTROLES DE CATÁLOGO (Filtros + Orden) ── */
-.cat-controls-row { 
-  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; 
-  gap: 1rem; margin-bottom: 2.75rem; 
-}
-.cat-filters { margin-bottom: 0 !important; }
-
-/* Estilo para el botón de Ordenamiento (Igual al de Agregar) */
-.cat-sort-wrapper {
-  display: flex; align-items: center;
-  background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3);
-  border-radius: 2px; padding: 0 0.4rem; /* Padding reducido para quitar espacio extra */
-  transition: all 0.2s; cursor: pointer;
-}
-.cat-sort-wrapper:hover {
-  background: var(--gold); border-color: var(--gold);
-}
-.sort-prefix {
-  font-family: var(--sans); font-size: 0.75rem; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold);
-  transition: color 0.2s; pointer-events: none;
-}
-.sort-select {
-  background: transparent; color: var(--gold); border: none;
-  padding: 0.5rem 0.1rem 0.5rem 0.3rem; /* Padding derecho casi en cero */
-  font-family: var(--sans); font-size: 0.75rem; font-weight: 600; 
-  text-transform: uppercase; cursor: pointer; outline: none; transition: color 0.2s;
-  appearance: none; -webkit-appearance: none; -moz-appearance: none;
-}
-/* Opciones del desplegable: Fondo dorado, letra oscura */
-.sort-select option { 
-  background: var(--gold); 
-  color: var(--dark); 
-  font-weight: 700; 
-}
-
-/* Efecto hover: Las letras cambian al color oscuro de fondo */
-.cat-sort-wrapper:hover .sort-prefix,
-.cat-sort-wrapper:hover .sort-select { color: var(--dark); }
-
 /* ── ANIMACIÓN DE TEXTO Y ZOOM MEJORADO EN CATÁLOGO ── */
 .cat-card * { transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 
@@ -765,7 +791,7 @@ h1 .brand { color: var(--gold); font-style: italic; }
 }
 
 .cat-card:hover .combo-img-collage { 
-  transform: scale(1.10); /* Reducido desde 1.45 a 1.30 */
+  transform: scale(0.50); /* Reducido desde 1.45 a 1.30 */
   z-index: 15;
   position: relative;
 }
@@ -774,8 +800,8 @@ h1 .brand { color: var(--gold); font-style: italic; }
 .cat-card:hover .cat-cat { font-size: 0.66rem; }
 .cat-card:hover .cat-cat span { font-size: 0.66rem; }
 .cat-card:hover .cat-name { font-size: 1.28rem; }
-.cat-card:hover .cat-desc { font-size: 0.92rem; line-height: 1.33; }
+.cat-card:hover .cat-desc { font-size: 0.9rem; line-height: 1.1; }
 .cat-card:hover .cat-price { font-size: 1.7rem; }
 .cat-card:hover .cat-price-lbl { font-size: 0.69rem; }
-.cat-card:hover .combo-card-items li { font-size: 0.825rem; }
+.cat-card:hover .combo-card-items li { font-size: 0.8rem; }
 .cat-card:hover .combo-badge { font-size: 0.6rem; padding: 0.275rem 0.6rem; }

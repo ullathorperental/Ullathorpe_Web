@@ -788,18 +788,17 @@ h1 .brand { color: var(--gold); font-style: italic; }
 /* ── ANIMACIÓN DE TEXTO Y ZOOM MEJORADO EN CATÁLOGO ── */
 .cat-card * { transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 
-/* Zoom en imágenes individuales (NO afecta a los combos para no romper la grilla) */
+/* Zoom en imágenes individuales (excluye a los combos para no romperlos) */
 .cat-card:not(.combo-style):hover .cat-img img { 
-  transform: scale(1.30); /* Aumento moderado para ítems simples */
+  transform: scale(1.30); 
   z-index: 15;
   position: relative;
 }
 
 /* Zoom en combos (escala TODA la grilla junta, manteniendo la estructura perfecta) */
 .cat-card.combo-style:hover .combo-img-collage { 
-  transform: scale(1.05); /* Crece armónicamente sin estirar la tarjeta */
+  transform: scale(1.05); /* Aumento moderado para que el grupo no tape todo */
   z-index: 15;
-  position: relative;
 }
 
 /* Aumento de tamaño MUCHO más notorio de las fuentes en hover */

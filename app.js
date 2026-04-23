@@ -448,8 +448,16 @@ async function loadData() {
     const searchInput = document.getElementById('cat-search');
     if (searchInput) {
       searchInput.addEventListener('input', () => {
-        buildMainFilters(); // Esto hace que las botoneras se adapten a las palabras
-        renderCatalog();    // Esto muestra las tarjetas
+        buildMainFilters();
+        renderCatalog();
+      });
+    }
+
+    // NUEVO: Evento para el selector de Ordenamiento
+    const sortInput = document.getElementById('cat-sort');
+    if (sortInput) {
+      sortInput.addEventListener('change', () => {
+        renderCatalog(); // Re-renderiza con el nuevo orden
       });
     }
 
@@ -571,6 +579,7 @@ function buildSubFilters(searchedData = getSearchedItems()) {
 }
 
 /* ── Renderizar las Cards ── */
+/* ── Renderizar las Cards ── */
 function renderCatalog() {
   const grid = document.getElementById('cat-grid');
   
@@ -586,6 +595,31 @@ function renderCatalog() {
     if (currentSubcat !== 'all') items = items.filter(i => i.subcat === currentSubcat);
   }
 
+  // 3. NUEVO: Lógica de Ordenamiento
+  const sortVal = document.getElementById('cat-sort')?.value || 'default';
+  
+  if (sortVal !== 'default') {
+    items.sort((a, b) => {
+      if (sortVal === 'category') {
+        // Ordena por Categoría y luego Subcategoría
+        const fullA = normalizeText(a.cat + (a.subcat || ''));
+        const fullB = normalizeText(b.cat + (b.subcat || ''));
+        return fullA.localeCompare(fullB);
+      }
+      if (sortVal === 'price-asc') {
+        return parsePriceToInt(a.price) - parsePriceToInt(b.price);
+      }
+      if (sortVal === 'price-desc') {
+        return parsePriceToInt(b.price) - parsePriceToInt(a.price);
+      }
+      if (sortVal === 'name') {
+        return normalizeText(a.name).localeCompare(normalizeText(b.name));
+      }
+      return 0;
+    });
+  }
+
+  // Continuar con el renderizado normal...
   if (!items.length) {
     grid.innerHTML = `<p style="color:var(--text-muted);font-size:.85rem;grid-column:1/-1;text-align:center;padding:2rem">No se encontraron equipos para esta búsqueda o sección.</p>`;
     return;

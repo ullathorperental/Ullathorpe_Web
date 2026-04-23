@@ -271,18 +271,20 @@ h1 .brand { color: var(--gold); font-style: italic; }
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,265px),1fr)); gap: 1.1rem; }
 .cat-card {
   background: var(--dark3); border: 1px solid rgba(255,255,255,.045); border-radius: var(--r);
-  overflow: hidden; transition: transform .22s, border-color .22s, box-shadow .22s; position: relative;
-  display: flex; flex-direction: column;
+  transition: transform .22s, border-color .22s, box-shadow .22s; position: relative;
+  display: flex; flex-direction: column; 
+  height: 100%; /* ESTO SOLUCIONA QUE LOS COMBOS QUEDEN DE DISTINTOS TAMAÑOS */
 }
-.cat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 0; background: var(--gold); transition: height .28s; }
-.cat-card:hover { transform: translateY(-2px); border-color: rgba(201,168,76,.18); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.cat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 0; background: var(--gold); transition: height .28s; z-index: 2; }
+.cat-card:hover { transform: translateY(-2px); border-color: rgba(201,168,76,.18); box-shadow: 0 10px 30px rgba(0,0,0,.45); z-index: 10; }
 .cat-card:hover::before { height: 100%; }
 
 /* Contenedor de Imagen (Normal y Combos) */
 .cat-img {
-  width: 100%; aspect-ratio: 4/3;
+  width: 100%; aspect-ratio: 4/3; flex-shrink: 0;
   background: var(--dark4); display: flex; align-items: center; justify-content: center;
-  overflow: hidden; position: relative;
+  position: relative; border-radius: var(--r) var(--r) 0 0;
+  /* Se quitó el 'overflow: hidden' para que desborden en todas direcciones */
 }
 /* Se achicó al 82% para darle "aire" (márgenes) a las fotos individuales */
 .cat-img img { 
@@ -719,37 +721,52 @@ h1 .brand { color: var(--gold); font-style: italic; }
 }
 .cat-filters { margin-bottom: 0 !important; }
 
-/* Estilo para el botón de Ordenamiento */
-.sort-select {
-  background: var(--dark3); 
-  color: var(--gold); 
-  border: 1px solid var(--gold);
-  padding: 0.45rem 1rem; 
-  border-radius: var(--r); 
-  font-family: var(--sans);
-  font-size: 0.7rem; 
-  font-weight: 600; 
-  text-transform: uppercase; 
-  cursor: pointer; 
-  outline: none;
-  transition: all 0.2s;
+/* Estilo para el botón de Ordenamiento (Igual al de Agregar) */
+.cat-sort-wrapper {
+  display: flex; align-items: center;
+  background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 2px; padding: 0 0.8rem;
+  transition: all 0.2s; cursor: pointer;
 }
-.sort-select:hover { background: var(--bordo); color: #fff; border-color: var(--bordo-light); }
+.cat-sort-wrapper:hover {
+  background: var(--gold); border-color: var(--gold);
+}
+.sort-prefix {
+  font-family: var(--sans); font-size: 0.75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold);
+  transition: color 0.2s; pointer-events: none;
+}
+.sort-select {
+  background: transparent; color: var(--gold); border: none;
+  padding: 0.5rem 0.5rem 0.5rem 0.3rem; font-family: var(--sans);
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  cursor: pointer; outline: none; transition: color 0.2s;
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+}
+/* Opciones del desplegable para que se lean claras */
+.sort-select option { background: var(--dark3); color: var(--text); }
+
+/* Efecto hover: Las letras cambian al color oscuro de fondo */
+.cat-sort-wrapper:hover .sort-prefix,
+.cat-sort-wrapper:hover .sort-select { color: var(--dark); }
 
 /* ── ANIMACIÓN DE TEXTO Y ZOOM MEJORADO EN CATÁLOGO ── */
 .cat-card * { transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 
-/* Zoom mayor en imágenes (sobresaliendo del cuadro) */
+/* Zoom en imágenes (ahora desbordan por todos lados y el zoom es más suave) */
 .cat-card:hover .cat-img img, 
-.cat-card:hover .cart-combo-container { 
-  transform: scale(1.45); /* Aumento significativo */
+.cat-card:hover .combo-img-collage { 
+  transform: scale(1.30); /* Reducido desde 1.45 a 1.30 */
+  z-index: 15;
+  position: relative;
 }
-.cat-img { overflow: visible !important; } /* Permite que la imagen se pase del recuadro */
 
-/* Aumento de tamaño de todas las fuentes en hover */
-.cat-card:hover .cat-cat { font-size: 0.65rem; }
-.cat-card:hover .cat-name { font-size: 1.25rem; }
-.cat-card:hover .cat-desc { font-size: 0.85rem; }
-.cat-card:hover .cat-price { font-size: 1.65rem; }
-.cat-card:hover .cat-price-lbl { font-size: 0.7rem; }
-.cat-card:hover .combo-card-items li { font-size: 0.82rem; }
+/* Aumento de tamaño MUCHO más notorio de las fuentes en hover */
+.cat-card:hover .cat-cat { font-size: 0.72rem; }
+.cat-card:hover .cat-cat span { font-size: 0.72rem; }
+.cat-card:hover .cat-name { font-size: 1.40rem; }
+.cat-card:hover .cat-desc { font-size: 1.00rem; line-height: 1.45; }
+.cat-card:hover .cat-price { font-size: 1.85rem; }
+.cat-card:hover .cat-price-lbl { font-size: 0.75rem; }
+.cat-card:hover .combo-card-items li { font-size: 0.90rem; }
+.cat-card:hover .combo-badge { font-size: 0.65rem; padding: 0.3rem 0.65rem; }

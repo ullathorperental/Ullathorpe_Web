@@ -579,12 +579,14 @@ function buildSubFilters(searchedData = getSearchedItems()) {
 }
 
 /* ── Renderizar las Cards ── */
-/* ── Renderizar las Cards ── */
 function renderCatalog() {
   const grid = document.getElementById('cat-grid');
   
   // 1. Obtenemos los ítems pre-filtrados por texto
-  let items = getSearchedItems(); 
+  let baseItems = getSearchedItems(); 
+
+  // IMPORTANTE: Clonamos el array para que el filtro de orden no destruya permanentemente el orden "Por defecto" de tu Sheet
+  let items = [...baseItems];
 
   // 2. Aplicamos la lógica de visualización según botones seleccionados
   if (currentCat === 'Combos') {

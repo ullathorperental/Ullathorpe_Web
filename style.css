@@ -848,9 +848,9 @@ h1 .brand { color: var(--gold); font-style: italic; }
 }
 
 /* Aumento de tamaño MUCHO más notorio de las fuentes en hover */
-.cat-card:hover .cat-cat { font-size: 0.4rem; }
+.cat-card:hover .cat-cat { font-size: 0.8rem; }
 .cat-card:hover .cat-cat span { font-size: 0.6rem; }
-.cat-card:hover .cat-name { font-size: 1.8rem; }
+.cat-card:hover .cat-name { font-size: 1.3rem; color: var(--gold); }
 .cat-card:hover .cat-desc { font-size: 0.8rem; line-height: 1.3; color: var(--text);}
 .cat-card:hover .cat-price { font-size: 1.6rem; }
 .cat-card:hover .cat-price-lbl { font-size: 0.65rem; }

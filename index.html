@@ -115,14 +115,22 @@
         <input type="text" id="cat-search" placeholder="Buscar equipos, lentes, marcas..." autocomplete="off" />
       </div>
 
-      <div class="cat-sort-wrapper">
-        <span class="sort-prefix">Orden:</span>
+      <div class="cat-sort-wrapper" title="Ordenar catálogo">
+        <!-- Ícono SVG de "Ordenar/Filtrar" -->
+        <svg class="cat-sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"></line>
+          <line x1="4" y1="12" x2="14" y2="12"></line>
+          <line x1="4" y1="18" x2="8" y2="18"></line>
+        </svg>
+        
         <select id="cat-sort" class="sort-select">
           <option value="default">Por defecto</option>
-          <option value="category">Categoría</option>
+          <option value="category-asc">Categoría A-Z</option>
+          <option value="category-desc">Categoría Z-A</option>
           <option value="price-asc">Menor precio</option>
           <option value="price-desc">Mayor precio</option>
-          <option value="name">Nombre A-Z</option>
+          <option value="name-asc">Nombre A-Z</option>
+          <option value="name-desc">Nombre Z-A</option>
         </select>
       </div>
     </div>

@@ -268,42 +268,51 @@ h1 .brand { color: var(--gold); font-style: italic; }
 }
 #cat-search:focus { border-color: rgba(201,168,76,0.5); background: rgba(255,255,255,0.05); }
 
-/* Botón de Ordenamiento Ajustado a su contenido */
+/* Botón de Ordenamiento (Ícono Compacto) */
 .cat-sort-wrapper {
+  position: relative;
   display: flex; 
   align-items: center; 
+  justify-content: center;
   background: rgba(201,168,76,0.1); 
   border: 1px solid rgba(201,168,76,0.3);
   border-radius: 30px; 
-  padding: 0 1rem; /* Padding justo para no dejar espacios vacíos */
+  width: 48px; /* Ancho fijo para formar un botón cuadrado redondeado */
+  min-width: 48px;
   transition: all 0.2s; 
   cursor: pointer;
-  width: max-content; /* Se ajusta exactamente al ancho del texto */
 }
 .cat-sort-wrapper:hover { background: var(--gold); border-color: var(--gold); }
 
-.sort-prefix {
-  font-family: var(--sans); font-size: 0.75rem; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold);
-  transition: color 0.2s; pointer-events: none;
-  margin-right: 5px; /* Menos espacio entre la palabra ORDEN y el menú */
-  display: flex; align-items: center;
+.cat-sort-icon {
+  width: 20px; 
+  height: 20px; 
+  color: var(--gold);
+  transition: color 0.2s; 
+  pointer-events: none; /* CRÍTICO: Permite que el clic atraviese el ícono y abra el menú */
+  z-index: 1;
 }
+
 .sort-select {
-  background: transparent; color: var(--gold); border: none;
-  padding: 0.8rem 0; /* Sin padding izquierdo para estar pegado a ORDEN */
-  font-family: var(--sans); font-size: 0.75rem; font-weight: 600; 
-  text-transform: uppercase; cursor: pointer; outline: none; transition: color 0.2s;
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0; /* Oculta el texto exterior, pero mantiene el menú 100% clickeable */
+  cursor: pointer;
+  z-index: 2;
   appearance: none; -webkit-appearance: none;
-  text-align: left; /* Alineado a la izquierda */
-  text-align-last: left;
-  display: flex; align-items: center;
 }
-.sort-select option { background: var(--gold); color: var(--dark); font-weight: 700; }
+
+/* Opciones desplegables */
+.sort-select option { 
+  background: var(--gold); 
+  color: var(--dark); 
+  font-weight: 700; 
+  text-align: left;
+}
 
 /* Efecto hover unificado */
-.cat-sort-wrapper:hover .sort-prefix,
-.cat-sort-wrapper:hover .sort-select { color: var(--dark); }
+.cat-sort-wrapper:hover .cat-sort-icon { color: var(--dark); }
 
 /* Ajuste para los filtros de abajo */
 .cat-filters { 

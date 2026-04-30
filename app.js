@@ -602,11 +602,13 @@ function renderCatalog() {
   
   if (sortVal !== 'default') {
     items.sort((a, b) => {
-      if (sortVal === 'category') {
+      if (sortVal === 'category-asc' || sortVal === 'category-desc') {
         // Ordena por Categoría y luego Subcategoría
         const fullA = normalizeText(a.cat + (a.subcat || ''));
         const fullB = normalizeText(b.cat + (b.subcat || ''));
-        return fullA.localeCompare(fullB);
+        return sortVal === 'category-asc' 
+          ? fullA.localeCompare(fullB) 
+          : fullB.localeCompare(fullA);
       }
       if (sortVal === 'price-asc') {
         return parsePriceToInt(a.price) - parsePriceToInt(b.price);
@@ -614,8 +616,12 @@ function renderCatalog() {
       if (sortVal === 'price-desc') {
         return parsePriceToInt(b.price) - parsePriceToInt(a.price);
       }
-      if (sortVal === 'name') {
-        return normalizeText(a.name).localeCompare(normalizeText(b.name));
+      if (sortVal === 'name-asc' || sortVal === 'name-desc') {
+        const nameA = normalizeText(a.name);
+        const nameB = normalizeText(b.name);
+        return sortVal === 'name-asc' 
+          ? nameA.localeCompare(nameB) 
+          : nameB.localeCompare(nameA);
       }
       return 0;
     });

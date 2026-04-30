@@ -297,21 +297,58 @@ h1 .brand { color: var(--gold); font-style: italic; }
   position: absolute;
   inset: 0;
   width: 100%; height: 100%;
-  opacity: 0; /* Oculta el texto exterior, pero mantiene el menú 100% clickeable */
+  opacity: 0; 
   cursor: pointer;
   z-index: 2;
   appearance: none; -webkit-appearance: none;
+  /* Restauramos la tipografía para que el menú desplegable la herede */
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 /* Opciones desplegables */
 .sort-select option { 
   background: var(--gold); 
   color: var(--dark); 
+  font-family: var(--sans); /* Aseguramos que la fuente aplique a las opciones */
   font-weight: 700; 
   text-align: left;
 }
 
 /* Efecto hover unificado */
+/* Cartelito flotante (Tooltip) con el criterio de orden actual */
+.cat-sort-wrapper::after {
+  content: attr(data-label);
+  position: absolute;
+  top: -38px; /* Aparece flotando arriba del botón */
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--dark2);
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--r);
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+}
+
+/* Animación de entrada al pasar el mouse por el botón */
+.cat-sort-wrapper:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-5px);
+}
+
 .cat-sort-wrapper:hover .cat-sort-icon { color: var(--dark); }
 
 /* Ajuste para los filtros de abajo */

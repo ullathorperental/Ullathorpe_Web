@@ -453,12 +453,23 @@ async function loadData() {
       });
     }
 
-    // NUEVO: Evento para el selector de Ordenamiento
+    // NUEVO: Evento para el selector de Ordenamiento y Cartelito (Tooltip)
     const sortInput = document.getElementById('cat-sort');
+    const sortWrapper = document.querySelector('.cat-sort-wrapper');
+
+    function updateSortLabel() {
+      if (sortInput && sortWrapper) {
+        const text = sortInput.options[sortInput.selectedIndex].text;
+        sortWrapper.setAttribute('data-label', 'ORDEN: ' + text);
+      }
+    }
+
     if (sortInput) {
       sortInput.addEventListener('change', () => {
-        renderCatalog(); // Re-renderiza con el nuevo orden
+        updateSortLabel(); // Actualiza el texto del cartelito
+        renderCatalog();   // Aplica el orden
       });
+      updateSortLabel(); // Ejecuta una vez al inicio para cargar "POR DEFECTO"
     }
 
     renderCatalog();

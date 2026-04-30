@@ -850,9 +850,9 @@ h1 .brand { color: var(--gold); font-style: italic; }
 /* Aumento de tamaño MUCHO más notorio de las fuentes en hover */
 .cat-card:hover .cat-cat { font-size: 0.8rem; }
 .cat-card:hover .cat-cat span { font-size: 0.6rem; }
-.cat-card:hover .cat-name { font-size: 1.3rem; color: var(--gold); }
-.cat-card:hover .cat-desc { font-size: 0.8rem; line-height: 1.3; color: var(--text);}
-.cat-card:hover .cat-price { font-size: 1.6rem; }
+.cat-card:hover .cat-name { font-size: 1.1rem; color: var(--gold); font-weight: bold; text-transform: uppercase; }
+.cat-card:hover .cat-desc { font-size: 0.9rem; line-height: 1.3; color: var(--text); font-weight: bold; text-transform: uppercase; }
+.cat-card:hover .cat-price { font-size: 1.6rem; font-weight: bold; }
 .cat-card:hover .cat-price-lbl { font-size: 0.65rem; }
-.cat-card:hover .combo-card-items li { font-size: 0.75rem; color: var(--text); }
+.cat-card:hover .combo-card-items li { font-size: 0.75rem; color: var(--text); font-weight: bold; text-transform: uppercase; }
 .cat-card:hover .combo-badge { font-size: 0.8rem; padding: 0.275rem 0.6rem; }

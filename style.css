@@ -67,19 +67,19 @@ body::after {
   background: transparent; border: none; outline: none; padding: 0; /* Quita el fondo blanco por defecto del botón */
 }
 .nav-logo img { 
-  height: 42px; width: auto; display: block; background: transparent;
+  height: 45px; width: auto; display: block; background: transparent;
   filter: drop-shadow(0 0 3px var(--gold)); 
 }
 .nav-logo-name {
-  font-family: var(--serif); font-size: 2.2rem; font-weight: 700; /* Letra más grande */
+  font-family: var(--serif); font-size: 1.8rem; font-weight: 700; /* Letra más grande */
   letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
   line-height: 1;
-  /* Trazo negro sólido (1.5px) y brillo dorado difuminado */
+  /* Trazo negro sólido (1px) y brillo dorado difuminado */
   text-shadow: 
-    -1.5px -1.5px 0 #000, 
-     1.5px -1.5px 0 #000, 
-    -1.5px  1.5px 0 #000, 
-     1.5px  1.5px 0 #000, 
+    -1px -1px 0 #000, 
+     1px -1px 0 #000, 
+    -1px  1px 0 #000, 
+     1px  1px 0 #000, 
     0 0 12px rgba(201,168,76,0.9), 
     0 0 25px rgba(201,168,76,0.5);
 }

@@ -9,10 +9,10 @@ from PIL import Image, ImageFilter
 import numpy as np
 
 # --- CONFIGURACIÓN ---
-INCLUIR_INDICE = True   # <-- Cambiá a False para generar el PDF sin la hoja de Índice
-INCLUIR_COMBOS = True  # <-- Cambiá esto a False para generar el PDF sin los combos
-MOSTRAR_SUBCAT_ITEMS = False  # <-- Cambiá a False para ocultar "Categoria | Subcategoria" en el catálogo
-MOSTRAR_BADGES_COMBOS = True # <-- Cambiá a False para ocultar las etiquetas (Ej: "NEWBIE") en los combos
+INCLUIR_INDICE = True   
+INCLUIR_COMBOS = True  
+MOSTRAR_SUBCAT_ITEMS = False  
+MOSTRAR_BADGES_COMBOS = True 
 
 ITEMS_POR_PAGINA = 4
 COMBOS_POR_PAGINA = 2
@@ -22,8 +22,8 @@ TEXTO_SLOGAN = "Acompañando a los profesionales desde sus inicios"
 TEXTO_CONTRAPORTADA = "Que tengas un excelente rodaje"
 TELEFONO_WHATSAPP = "011-7020-1017"
 
-TRAZO_DORADO_PX = 3           # <-- Grosor del trazo en píxeles (recomendado: 2 a 4)
-TRAZO_COLOR = (201, 168, 76)  # <-- Color dorado del proyecto (#C9A84C)
+TRAZO_DORADO_PX = 3           
+TRAZO_COLOR = (201, 168, 76)  
 
 SHEET_CATALOGO_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrkO59tIJIoo4cWllZAv0DDmf0AhsMdo4Gl3xSD73zMQqF81K11yRihYrWJJN0T9vAwFk_LgWnYHLU/pub?gid=972536254&single=true&output=csv'
 SHEET_COMBOS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrkO59tIJIoo4cWllZAv0DDmf0AhsMdo4Gl3xSD73zMQqF81K11yRihYrWJJN0T9vAwFk_LgWnYHLU/pub?gid=1902386512&single=true&output=tsv'
@@ -63,7 +63,6 @@ def aplicar_trazo_dorado(nombre_archivo, grosor=TRAZO_DORADO_PX, color=TRAZO_COL
     Image.fromarray(datos, 'RGBA').save(ruta_destino, 'PNG')
     return nombre_archivo
 
-
 def procesar_imagenes_catalogo(paginas_catalogo, paginas_combos):
     os.makedirs(DIR_TEMP, exist_ok=True)
     imagenes_procesadas = set()
@@ -86,12 +85,10 @@ def procesar_imagenes_catalogo(paginas_catalogo, paginas_combos):
 
     print(f"  {len(imagenes_procesadas)} imagen(es) procesada(s).")
 
-
 def limpiar_temporales():
     if os.path.exists(DIR_TEMP):
         shutil.rmtree(DIR_TEMP)
         print("  Archivos temporales eliminados.")
-
 
 # --- FUNCIONES DE DATOS ---
 
@@ -113,22 +110,23 @@ def limpiar_precio(precio_raw):
     if p.endswith('.00'): p = p[:-3]
     return p
 
-# Función robusta para pluralizar en español y términos audiovisuales
+def safe_float(val):
+    if not val: return 0.0
+    try:
+        return float(str(val).replace('.', '').replace(',', '.'))
+    except:
+        return 0.0
+
 def pluralizar_es(palabra):
     if not palabra:
         return palabra
     p = palabra.strip().upper()
     
-    if p.endswith('S'):
-        return p
-    if p.endswith('Z'):
-        return p[:-1] + 'CES'
-    if p[-1] in 'AEIOUÁÉÍÓÚ':
-        return p + 'S'
-    if p[-1] in 'TPKDMG': 
-        return p + 'S'
+    if p.endswith('S'): return p
+    if p.endswith('Z'): return p[:-1] + 'CES'
+    if p[-1] in 'AEIOUÁÉÍÓÚ': return p + 'S'
+    if p[-1] in 'TPKDMG': return p + 'S'
     return p + 'ES'
-
 
 # --- DESCARGA DE DATOS ---
 print("Descargando datos de Google Sheets...")
@@ -144,6 +142,8 @@ max_len_nombre_cat = 0
 max_len_desc_cat = 0
 
 catalogo_jerarquico = {}
+base_cat_order = {}
+base_subcat_order = {}
 
 for item in datos_catalogo:
     categoria = item.get('Categoría', '').strip()
@@ -158,15 +158,105 @@ for item in datos_catalogo:
         if len(nombre) > max_len_nombre_cat: max_len_nombre_cat = len(nombre)
         if len(desc) > max_len_desc_cat: max_len_desc_cat = len(desc)
 
-        cat_upper = categoria.upper()
+        cat_upper_original = categoria.upper()
+        cat_str = categoria
         subcat_upper = subcat_limpia.upper()
+        nombre_upper = nombre.upper()
+        
+        # ⚡ LÓGICA REFINADA: Interceptar Lentes y convertirlos en Subcategorías Maestras ⚡
+        is_lente = ('LENTE' in cat_upper_original) or ('LENTE' in subcat_upper)
+        if is_lente:
+            brand = ''
+            if '7ARTISANS' in subcat_upper or '7ARTISANS' in nombre_upper: brand = '7ARTISANS'
+            elif 'SONY' in subcat_upper or 'SONY' in nombre_upper: brand = 'SONY'
+            elif 'CANON' in subcat_upper or 'CANON' in nombre_upper: brand = 'CANON'
+            elif 'NIKON' in subcat_upper or 'NIKON' in nombre_upper: brand = 'NIKON'
+            
+            if brand == 'SONY': subcat_upper = 'LENTES SONY'
+            elif brand == '7ARTISANS': subcat_upper = 'LENTES 7ARTISANS (PARA SONY)'
+            elif brand == 'CANON': subcat_upper = 'LENTES CANON'
+            elif brand == 'NIKON': subcat_upper = 'LENTES NIKON'
+            else: subcat_upper = f"LENTES {subcat_limpia.upper()}" if subcat_limpia else "LENTES"
+            
+            # Aseguramos que caiga en "Foto & Video" o en la categoría donde el cliente lo puso
+            if cat_upper_original == 'LENTES':
+                cat_str = 'FOTO & VIDEO'
+                cat_upper_original = 'FOTO & VIDEO'
 
-        if cat_upper not in catalogo_jerarquico:
-            catalogo_jerarquico[cat_upper] = {}
-        if subcat_upper not in catalogo_jerarquico[cat_upper]:
-            catalogo_jerarquico[cat_upper][subcat_upper] = []
+        else:
+            # ⚡ REGLAS DE AISLAMIENTO: GRIPERÍA Y TELAS ⚡
+            if cat_upper_original in ['GRIPERIA', 'GRIPERÍA']:
+                subcat_upper = ''
+                
+            if cat_upper_original == 'TELAS' or subcat_upper == 'TELAS' or 'TELA' in subcat_upper:
+                cat_str = 'TELAS'
+                cat_upper_original = 'TELAS'
+                subcat_upper = ''
+            
+            # ⚡ REGLAS DE SONIDO ⚡
+            if cat_upper_original == 'SONIDO':
+                if any(x in subcat_upper for x in ['BOOM', 'CAÑA']):
+                    subcat_upper = 'BOOM'
+                elif 'CORBATERO' in subcat_upper:
+                    subcat_upper = 'CORBATEROS'
+                elif any(x in subcat_upper for x in ['GRABADORA', 'CABLE']):
+                    subcat_upper = 'BASE_SONIDO'
 
-        catalogo_jerarquico[cat_upper][subcat_upper].append(item)
+        # Registramos el orden de aparición para el Índice
+        if cat_upper_original not in base_cat_order:
+            base_cat_order[cat_upper_original] = len(base_cat_order)
+            
+        # Registramos el orden de aparición de las subcategorías (Para saber dónde cayó Lente original)
+        if subcat_upper not in base_subcat_order:
+            base_subcat_order[subcat_upper] = len(base_subcat_order)
+
+        item['_Subcat_Calculada'] = subcat_upper
+
+        if cat_str not in catalogo_jerarquico:
+            catalogo_jerarquico[cat_str] = {}
+        if subcat_upper not in catalogo_jerarquico[cat_str]:
+            catalogo_jerarquico[cat_str][subcat_upper] = []
+
+        catalogo_jerarquico[cat_str][subcat_upper].append(item)
+
+# ⚡ ORDEN DE CATEGORÍAS PRINCIPALES (TELAS EXACTAMENTE ANTES DE GRIPERÍA) ⚡
+def cat_sort_key(item_tuple):
+    cat = item_tuple[0].upper()
+    
+    if cat == 'TELAS':
+        fv_order = base_cat_order.get('FOTO & VIDEO', base_cat_order.get('FOTO Y VIDEO', 0))
+        return fv_order + 0.99 
+        
+    return base_cat_order.get(cat, 50)
+
+catalogo_jerarquico = dict(sorted(catalogo_jerarquico.items(), key=cat_sort_key))
+
+# ⚡ ORDENAMIENTO INTERNO (SUBCATEGORIAS Y PRECIOS) ⚡
+for cat in catalogo_jerarquico:
+    def subcat_sort_key(item_tuple):
+        sub = item_tuple[0].upper()
+        
+        # Encontramos la posición original del primer lente en el Excel
+        lente_anchor = 50
+        for k in base_subcat_order:
+            if k.startswith('LENTE'):
+                lente_anchor = base_subcat_order[k]
+                break
+                
+        # Forzamos las marcas exactas a posicionarse matemáticamente sobre ese ancla
+        if sub == 'LENTES SONY': return lente_anchor + 0.1
+        if sub == 'LENTES 7ARTISANS (PARA SONY)': return lente_anchor + 0.2
+        if sub == 'LENTES CANON': return lente_anchor + 0.3
+        if sub == 'LENTES NIKON': return lente_anchor + 0.4
+        if sub.startswith('LENTE'): return lente_anchor + 0.5
+        
+        return base_subcat_order.get(sub, 50)
+        
+    catalogo_jerarquico[cat] = dict(sorted(catalogo_jerarquico[cat].items(), key=subcat_sort_key))
+
+    for sub in catalogo_jerarquico[cat]:
+        if sub.startswith('LENTE'):
+            catalogo_jerarquico[cat][sub].sort(key=lambda x: safe_float(x['PrecioLimpio']), reverse=True)
 
 fuente_cat_nombre = "2rem"
 fuente_cat_desc = "1.15rem"
@@ -209,30 +299,43 @@ if max_len_nombre_combo > 40: fuente_combo_nombre = "1.8rem"
 toc_catalogo = []
 paginas_catalogo = []
 cat_index = 0
+added_to_toc = set()
 
 for cat, subcats_dict in catalogo_jerarquico.items():
     cat_id = f"cat-{cat_index}"
-    toc_catalogo.append({'titulo': cat, 'id': cat_id})
+    
+    # ⚡ ÍNDICE LIMPIO: Solo la categoría de Excel en MAYÚSCULAS ⚡
+    base_toc_name = cat.upper()
+    if base_toc_name not in added_to_toc:
+        toc_catalogo.append({'titulo': base_toc_name, 'id': cat_id})
+        added_to_toc.add(base_toc_name)
+        
     cat_index += 1
 
     large_subcats = {}
     small_subcats_items = []
 
     for subcat, items in subcats_dict.items():
-        if len(items) >= 3:
+        # Los lentes forzosamente van a large_subcats para tener su propio salto de página
+        if len(items) >= 3 or subcat.startswith('LENTE'):
             large_subcats[subcat] = items
         else:
             small_subcats_items.extend(items)
 
     first_page_of_cat = True
 
-    # Bloque de subcategorías grandes (3 o más)
+    # Bloque de subcategorías grandes
     for subcat, items in large_subcats.items():
         for i in range(0, len(items), ITEMS_POR_PAGINA):
             bloque = items[i:i + ITEMS_POR_PAGINA]
             
-            if cat.strip().upper() == "SONIDO":
-                titulo_pagina = "SONIDO"
+            if subcat.startswith('LENTE'):
+                titulo_pagina = subcat 
+            elif cat.upper() == "SONIDO":
+                if subcat == 'BASE_SONIDO': titulo_pagina = "SONIDO"
+                else: titulo_pagina = f"SONIDO - {subcat}" if subcat else "SONIDO"
+            elif cat.upper() == "TELAS":
+                titulo_pagina = "TELAS"
             else:
                 titulo_pagina = pluralizar_es(subcat) if subcat else cat
 
@@ -250,22 +353,23 @@ for cat, subcats_dict in catalogo_jerarquico.items():
 
         subcats_in_block = []
         for item in bloque:
-            sub = item.get('Subcat_Limpia', '').strip().upper()
+            sub = item.get('_Subcat_Calculada', '')
             if sub and sub not in subcats_in_block:
                 subcats_in_block.append(sub)
 
-        # ⚡ LÓGICA REFINADA SIN HARDCODEAR (La magia para Gripería) ⚡
-        if cat.strip().upper() == "SONIDO":
-            titulo_pagina = "SONIDO"
+        if cat.upper() == "SONIDO":
+            real_subcats = [s for s in subcats_in_block if s != 'BASE_SONIDO']
+            if not real_subcats:
+                titulo_pagina = "SONIDO"
+            elif len(real_subcats) == 1:
+                titulo_pagina = f"SONIDO - {real_subcats[0]}"
+            else:
+                titulo_pagina = f"SONIDO - {' / '.join(real_subcats)}"
         elif not large_subcats:
-            # Si TODA la categoría es un conjunto de ítems sueltos (como Gripería), 
-            # no se consideran "Accesorios", sino que son los elementos principales.
             titulo_pagina = cat
         elif len(subcats_in_block) > 1:
-            # Si hay ítems grandes y acá se agruparon múltiples sobrantes, son "Accesorios".
-            titulo_pagina = "ACCESORIOS"
+            titulo_pagina = f"{cat} - ACCESORIOS"
         else:
-            # Si hay ítems grandes pero este resto es de 1 sola subcategoría chica.
             titulo_pagina = cat
 
         paginas_catalogo.append({
@@ -280,9 +384,15 @@ toc_combos = []
 paginas_combos = []
 
 if INCLUIR_COMBOS:
+    added_combos_to_toc = False
     for categoria, combos_list in combos_temp_data.items():
         cat_id = f"combo-{cat_index}"
-        toc_combos.append({'titulo': f"COMBOS {categoria}", 'id': cat_id})
+        
+        # ⚡ ÍNDICE LIMPIO: Solo la palabra COMBOS una vez ⚡
+        if not added_combos_to_toc:
+            toc_combos.append({'titulo': 'COMBOS', 'id': cat_id})
+            added_combos_to_toc = True
+            
         cat_index += 1
 
         for i in range(0, len(combos_list), COMBOS_POR_PAGINA):
@@ -297,7 +407,6 @@ if INCLUIR_COMBOS:
 print("Aplicando trazo dorado a las imágenes...")
 procesar_imagenes_catalogo(paginas_catalogo, paginas_combos)
 
-# Ruta relativa a DIR_TEMP que usará el template (relativa a BASE_DIR)
 RUTA_IMG_CATALOGO = os.path.relpath(DIR_TEMP, BASE_DIR).replace('\\', '/')
 
 meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']

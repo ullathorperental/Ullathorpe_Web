@@ -7,6 +7,7 @@
 
         :root {
             --gold: #C9A84C;
+            --bordo: #9b2525;
             --bordo-light: #9b2525;
             --dark: #2a2a2a;
             --dark2: #363636;  
@@ -343,11 +344,13 @@
             margin-bottom: 12px;
             display: inline-block;
         }
-        .badge-newbie { background: #3b4252; color: #d8dee9; border: 1px solid #4c566a; }
-        .badge-intermedio { background: #5e81ac; color: #eceff4; border: 1px solid #81a1c1; }
-        .badge-avanzado { background: #b48ead; color: #eceff4; border: 1px solid #c6a0f6; }
-        .badge-pro { background: var(--gold); color: #000; box-shadow: 0 0 10px rgba(201,168,76,0.3); }
-        .badge-default { background: var(--bordo-light); color: var(--gold); }
+        
+        /* Lógica de colores de Badges de Kit */
+        .combo-badge.badge-pro { background: var(--gold); color: var(--dark); border: 1px solid var(--gold); }
+        .combo-badge.badge-avanzado { background: var(--bordo); color: var(--gold); }
+        .combo-badge.badge-intermedio { background: #3a3a3a; color: #fff; border: 1px solid #555; }
+        .combo-badge.badge-newbie { background: #9e9e9e; color: #1a1a1a; border: 1px solid #808080; }
+        .combo-badge.badge-default { background: var(--bordo); color: var(--gold); }
 
         .combo-name {
             font-family: 'Cormorant Garamond', serif;

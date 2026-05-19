@@ -368,8 +368,8 @@ function checkout() {
   // Se usan los códigos Unicode puros para que ningún servidor ni navegador pueda romper el emoji
   // \uD83D\uDCC6 = 📆 | \uD83D\uDCC5 = 📅
   // \u23F1\uFE0F = ⏱️ | \u23F3 = ⏳
-  const iconDate = isMobile ? '\uD83D\uDCC6' : '\uD83D\uDCC5'; 
-  const iconTime = isMobile ? '\u23F1\uFE0F' : '\u23F3'; 
+  const iconDate = isMobile ? '\uD83D\uDCC6' : '-'; 
+  const iconTime = isMobile ? '\u23F1\uFE0F' : '-'; 
 
   msg += `${iconDate} Fecha de retiro: ${dateFormatted}\n`;
   msg += `${iconTime} Jornadas: ${daysVal}\n\n`;

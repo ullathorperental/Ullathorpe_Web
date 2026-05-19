@@ -340,7 +340,15 @@ function checkout() {
   const dateVal = document.getElementById('cart-date').value;
   const daysVal = parseInt(document.getElementById('cart-days').value) || 1;
   const [y, m, d] = dateVal.split('-');
-  const dateFormatted = d ? `${d}/${m}/${y}` : 'A confirmar';
+  
+  let dateFormatted = 'A confirmar';
+  if (d && m && y) {
+    // Calculamos el día de la semana (restando 1 al mes porque en JS empiezan en 0)
+    const dateObj = new Date(y, m - 1, d);
+    const daysOfWeek = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+    const dayName = daysOfWeek[dateObj.getDay()];
+    dateFormatted = `${dayName} ${d}/${m}/${y}`;
+  }
 
   let msg = "Hola Ullathorpe! Quiero reservar lo siguiente:\n\n";
   let totalPrice = 0;
@@ -353,8 +361,18 @@ function checkout() {
   });
   
   msg += `\n*Total: $${formatNumber(totalPrice)}*\n\n`;
-  msg += `📆 Fecha de retiro: ${dateFormatted}\n`;
-  msg += `⏱️ Jornadas: ${daysVal}\n\n`;
+  
+  // Detección de dispositivo para evitar los símbolos  en WhatsApp Web
+  const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  
+  // Se usan los códigos Unicode puros para que ningún servidor ni navegador pueda romper el emoji
+  // \uD83D\uDCC6 = 📆 | \uD83D\uDCC5 = 📅
+  // \u23F1\uFE0F = ⏱️ | \u23F3 = ⏳
+  const iconDate = isMobile ? '\uD83D\uDCC6' : '\uD83D\uDCC5'; 
+  const iconTime = isMobile ? '\u23F1\uFE0F' : '\u23F3'; 
+
+  msg += `${iconDate} Fecha de retiro: ${dateFormatted}\n`;
+  msg += `${iconTime} Jornadas: ${daysVal}\n\n`;
   msg += "Espero confirmación de disponibilidad.";
   
   openWsp(msg);
